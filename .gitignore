@@ -1,0 +1,15 @@
+# Dependencias de Node.js 
+node_modules/
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistemas operativos
+.DS_Store
+Thumbs.db
+
+# Otros archivos generados
+dist/
+build/
