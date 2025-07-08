@@ -8,9 +8,9 @@ const InventarioService = require("../services/ReporteInventarioService");
 
 class inventariocontroller {
   /**
-   * TODO FUNCIÓN PARA OBTENER LISTADO DE SALDOS INGRESADOS
+   * TODO FUNCIÓN PARA OBTENER LISTADO DE SALDOS INGRESADOS GENERAL
    */
-  static async obtenerSaldoIngresos(req, res, next) {
+  static async SaldoIngresosGeneral(req, res, next) {
     var jsonResponse = { status: 500, message: "", response: "" };
 
     // Definir las validaciones de campos dentro del método
@@ -33,7 +33,7 @@ class inventariocontroller {
 
       let data, total;
 
-      ({ data, total } = await InventarioService.dataSaldoIngresos({
+      ({ data, total } = await InventarioService.dataSaldoIngresosGeneral({
         datobusqueda,
         tipo_documento,
         limit,
@@ -66,6 +66,62 @@ class inventariocontroller {
 
     return res.status(jsonResponse.status).json(jsonResponse);
   } //END LISTADO DE SALDOS INGRESADOS
+
+    /**
+   * TODO FUNCIÓN PARA OBTENER LISTADO DE SALDOS INGRESADOS DETALLES
+   */
+  static async SaldoIngresosDetalle(req, res, next) {
+    var jsonResponse = { status: 500, message: "", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("iga_stal_id").notEmpty().withMessage("iga_stal_id es requerido."),
+      check("iga_id").notEmpty().withMessage("iga_id es requerido.")
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      //Guardamos en estas variables la data que envió el usuario
+      const {  iga_stal_id, iga_id } = req.body;
+     
+
+      let data;
+
+      ({ data } = await InventarioService.dataSaldoIngresosDetalle({
+        iga_stal_id,
+        iga_id,
+      }));
+ 
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: {
+          data: data,
+        },
+      };
+    } catch (error) {
+      //! Registramos el error capturado
+      try {
+        next(error);
+      } catch (e) {}
+
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  } //END LISTADO DE SALDOS INGRESADOS
+
 
   /**
    * TODO FUNCIÓN PARA OBTENER LISTADO DE SALDOS INGRESADOS

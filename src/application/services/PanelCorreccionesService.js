@@ -608,17 +608,17 @@ async function data_actualizar_cliente({
   cliente_nuevo,
   cad_id,
 }) {
-  try {
+ 
     let resultado = false;
 
     switch (tipo) {
       case "Carta":
-        const [actualizarCarta] = await DetalleCA.update(
+        const actualizarCarta = await DetalleCA.update(
           { cad_cli_id : cliente_nuevo },
           { where: { cad_id } }
         );
 
-        if (actualizarCarta === 0) {
+        if (actualizarCarta == 0) {
           throw new Error(
             `No se encontró o no se pudo actualizar la carta con cad_id: ${cad_id}`
           );
@@ -629,6 +629,7 @@ async function data_actualizar_cliente({
           where: { cad_id },
           attributes: ["cad_cac_id"],
         });
+       
 
         const cad_cac_id = registro?.cad_cac_id;
         if (!cad_cac_id) {
@@ -668,6 +669,7 @@ async function data_actualizar_cliente({
           `
         );
         
+        
 
         if (!informes || informes.length === 0) {
           throw new Error(`No se encontró informe para cad_id: ${cad_id}`);
@@ -679,7 +681,7 @@ async function data_actualizar_cliente({
         }
         const actualizadoInforme = await InformeGuardaAlmancen.update(
           { iga_cli_id: cliente_nuevo },
-          { where: { iga_cad_id: igaId } }
+          { where: { iga_id: igaId } }
         );
 
         if (actualizadoInforme == 0) {
@@ -745,10 +747,7 @@ async function data_actualizar_cliente({
     }
 
     return resultado;
-  } catch (error) {
-    console.error("Error en data_actualizar_cliente:", error.message);
-    return false;
-  }
+  
 }
 async function data_actualizar_aduana({
   req,

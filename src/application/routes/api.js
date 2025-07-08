@@ -305,7 +305,7 @@ router.post('/panelcorrecciones/ObtenerDatosPaisDestino', verifyToken, panelcorr
 router.post('/panelcorrecciones/ActualizarPaisDestino', verifyToken, panelcorreccionescontroller.ActualizarPaisDestino);
 //!
 //*para obtener los datos del cliente seria esta misma == > panelcorrecciones/ConsultarDocumento
-router.post('/panelcorrecciones/CambioCliente', verifyToken, panelcorreccionescontroller.CambioCliente);
+router.post('/panelcorrecciones/CambioCliente', verifyToken,panelcorreccionescontroller.CambioCliente);
 //*para obtener los datos del cliente seria esta misma == > panelcorrecciones/ConsultarDocumento
 router.post('/panelcorrecciones/CambioTransportista', verifyToken, panelcorreccionescontroller.CambioTransportista);
 //*para obtener los datos del cliente seria esta misma == > panelcorrecciones/ConsultarDocumento
@@ -318,13 +318,18 @@ router.post('/panelcorrecciones/CambioContenedor', verifyToken, panelcorreccione
 //===========================================================================
 
 //router.post('/inventario/SaldoIngresos', verifyToken, inventariocontroller.obtenerSaldoIngresos);
-router.post('/inventario/SaldoIngresos', inventariocontroller.obtenerSaldoIngresos);
+router.post('/inventario/SaldoIngresosGeneral',verifyToken, inventariocontroller.SaldoIngresosGeneral);
 // {
 //     "tipo_documento": "Informe",
 //     "datobusqueda":"2990052025AS001",
 //     "page":1
 // }
-router.post('/inventario/SaldoIngresosFecha', inventariocontroller.SaldoIngresosFecha);
+router.post('/inventario/SaldoIngresosDetalle',verifyToken, inventariocontroller.SaldoIngresosDetalle);
+// {
+//     "iga_stal_id":3,// este es regimen
+//     "iga_id":66756
+// }
+router.post('/inventario/SaldoIngresosFecha',verifyToken, inventariocontroller.SaldoIngresosFecha);
 // {
 //     "fecha_inicio": "2017-01-01",
 //     "fecha_final":"2025-07-08",
