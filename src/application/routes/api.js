@@ -37,6 +37,7 @@ const reportesinternoscontroller = require('../controllers/reportesinternoscontr
 const servicioscontroller = require('../controllers/servicioscontroller');
 const panelcorreccionescontroller = require('../controllers/panelcorreccionescontroller');
 const documentossalidascontroller = require('../controllers/documentossalidascontroller');
+const inventariocontroller = require('../controllers/inventariocontroller');
 const { ro } = require('date-fns/locale');
 
 //===========================================================================
@@ -311,6 +312,15 @@ router.post('/panelcorrecciones/CambioTransportista', verifyToken, panelcorrecci
 router.post('/panelcorrecciones/CambioAduana', verifyToken, panelcorreccionescontroller.CambioAduana);
 
 router.post('/panelcorrecciones/CambioContenedor', verifyToken, panelcorreccionescontroller.CambioContenedor);
+
+//===========================================================================
+// TODO: INVENTARIO
+//===========================================================================
+
+//router.post('/inventario/SaldoIngresos', verifyToken, inventariocontroller.obtenerSaldoIngresos);
+router.post('/inventario/SaldoIngresos', inventariocontroller.obtenerSaldoIngresos);
+router.post('/inventario/SaldoIngresosFecha', inventariocontroller.SaldoIngresosFecha);
+
 //===========================================================================
 module.exports = router;
 //===========================================================================
