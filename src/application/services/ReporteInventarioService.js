@@ -334,6 +334,7 @@ async function dataSaldoIngresosFecha({
         AND sal_fecha BETWEEN '${fecha_inicio}' AND '${fecha_final}'
     `;
     const [[{ bultos }]] = await db.query(sqlSalidas);
+    let salida = Number(bultos)
 
     const saldo = row.saldo_inicial - bultos;
 
@@ -343,7 +344,7 @@ async function dataSaldoIngresosFecha({
 
       nuevoarreglo.push({
         ...row,
-        bultos_salida: bultos,
+        bultos_salida: salida,
         saldo_calculado: saldo,
       });
 
