@@ -319,7 +319,17 @@ router.post('/panelcorrecciones/CambioContenedor', verifyToken, panelcorreccione
 
 //router.post('/inventario/SaldoIngresos', verifyToken, inventariocontroller.obtenerSaldoIngresos);
 router.post('/inventario/SaldoIngresos', inventariocontroller.obtenerSaldoIngresos);
+// {
+//     "tipo_documento": "Informe",
+//     "datobusqueda":"2990052025AS001",
+//     "page":1
+// }
 router.post('/inventario/SaldoIngresosFecha', inventariocontroller.SaldoIngresosFecha);
+// {
+//     "fecha_inicio": "2017-01-01",
+//     "fecha_final":"2025-07-08",
+//     "id_cliente":11084
+// }
 
 //===========================================================================
 module.exports = router;
