@@ -608,55 +608,51 @@ async function data_actualizar_cliente({
   cliente_nuevo,
   cad_id,
 }) {
- 
-    let resultado = false;
+  let resultado = false;
 
-    switch (tipo) {
-      case "Carta":
-        const actualizarCarta = await DetalleCA.update(
-          { cad_cli_id : cliente_nuevo },
-          { where: { cad_id } }
+  switch (tipo) {
+    case "Carta":
+      const actualizarCarta = await DetalleCA.update(
+        { cad_cli_id: cliente_nuevo },
+        { where: { cad_id } }
+      );
+
+      if (actualizarCarta == 0) {
+        throw new Error(
+          `No se encontró o no se pudo actualizar la carta con cad_id: ${cad_id}`
         );
+      }
 
-        if (actualizarCarta == 0) {
-          throw new Error(
-            `No se encontró o no se pudo actualizar la carta con cad_id: ${cad_id}`
-          );
-        }
+      // Obtener cad_cac_id relacionado
+      const registro = await DetalleCA.findOne({
+        where: { cad_id },
+        attributes: ["cad_cac_id"],
+      });
 
-        // Obtener cad_cac_id relacionado
-        const registro = await DetalleCA.findOne({
-          where: { cad_id },
-          attributes: ["cad_cac_id"],
-        });
-       
+      const cad_cac_id = registro?.cad_cac_id;
+      if (!cad_cac_id) {
+        throw new Error(
+          `No se encontró cad_cac_id relacionado a la carta con cad_id: ${cad_id}`
+        );
+      }
 
-        const cad_cac_id = registro?.cad_cac_id;
-        if (!cad_cac_id) {
-          throw new Error(
-            `No se encontró cad_cac_id relacionado a la carta con cad_id: ${cad_id}`
-          );
-        }
+      // Crear PDF carta
+      const actualizarCartapdf = await helpercontroller.CrearPDFCA({
+        req,
+        res,
+        next,
+        id: cad_cac_id,
+      });
 
-        // Crear PDF carta
-        const actualizarCartapdf = await helpercontroller.CrearPDFCA({
-          req,
-          res,
-          next,
-          id: cad_cac_id,
-        });
+      if (!actualizarCartapdf) {
+        throw new Error(
+          `No se pudo crear el PDF de la carta con cad_cac_id: ${cad_cac_id}`
+        );
+      }
 
-        if (!actualizarCartapdf) {
-          throw new Error(
-            `No se pudo crear el PDF de la carta con cad_cac_id: ${cad_cac_id}`
-          );
-        }
-
-        
-
-        // Consultar informe relacionado usando parámetro para seguridad
-        const [informes] = await db.query(
-          `SELECT
+      // Consultar informe relacionado usando parámetro para seguridad
+      const [informes] = await db.query(
+        `SELECT
               c.cac_id AS cacId,
               c.cac_numero AS carta,
               i.iga_id AS igaId,
@@ -667,87 +663,83 @@ async function data_actualizar_cliente({
             LEFT JOIN clg_iga_informeguardalmacen i ON i.iga_cad_id = d.cad_id
             WHERE d.cad_id = ${cad_id} AND (i.iga_estado IS NULL OR i.iga_estado = 1);
           `
+      );
+
+      if (!informes || informes.length === 0) {
+        throw new Error(`No se encontró informe para cad_id: ${cad_id}`);
+      }
+
+      const igaId = informes[0]?.igaId;
+      if (!igaId) {
+        throw new Error(`La variable igaId es null o indefinida`);
+      }
+      const actualizadoInforme = await InformeGuardaAlmancen.update(
+        { iga_cli_id: cliente_nuevo },
+        { where: { iga_id: igaId } }
+      );
+
+      if (actualizadoInforme == 0) {
+        throw new Error(`No se actualizo el informe: ${igaId}`);
+      }
+
+      // Crear PDF informe
+      const Actualizadopdf = await helpercontroller.CrearPdfInforme({
+        req,
+        res,
+        next,
+        id: igaId,
+      });
+
+      if (Actualizadopdf == false) {
+        throw new Error(
+          `No se pudo crear el PDF del informe con cad_cac_id: ${cad_cac_id}`
         );
-        
-        
+      }
 
-        if (!informes || informes.length === 0) {
-          throw new Error(`No se encontró informe para cad_id: ${cad_id}`);
-        }
+      break;
 
-        const igaId = informes[0]?.igaId;
-        if (!igaId) {
-          throw new Error(`La variable igaId es null o indefinida`);
+    case "Informe":
+      const informe = await InformeGuardaAlmancen.findOne({
+        where: { iga_codigo: documento },
+        attributes: ["iga_cac_id", "iga_codigo", "iga_id"],
+      });
+
+      if (!informe) return false;
+
+      const actualizado = await InformeGuardaAlmancen.update(
+        { iga_cli_id: cliente_nuevo },
+
+        {
+          where: {
+            iga_codigo: informe.iga_codigo,
+          },
         }
-        const actualizadoInforme = await InformeGuardaAlmancen.update(
-          { iga_cli_id: cliente_nuevo },
-          { where: { iga_id: igaId } }
+      );
+      if (actualizado == 0) {
+        throw new Error(
+          `No se encontró o no se pudo actualizar el informe con iga_codigo: ${informe.iga_codigo}`
         );
+      }
 
-        if (actualizadoInforme == 0) {
-          throw new Error(`No se actualizo el informe: ${igaId}`);
-        }
-       
-        // Crear PDF informe
-        const Actualizadopdf = await helpercontroller.CrearPdfInforme({
+      if (actualizado == 1) {
+        await helpercontroller.CrearPdfInforme({
           req,
           res,
           next,
-          id: igaId,
+          id: informe.iga_id,
         });
-
-        if (Actualizadopdf == false) {
-          throw new Error(
-            `No se pudo crear el PDF del informe con cad_cac_id: ${cad_cac_id}`
-          );
-        }
-
-
-        break;
-
-      case "Informe":
-        const informe = await InformeGuardaAlmancen.findOne({
-          where: { iga_codigo: documento },
-          attributes: ["iga_cac_id", "iga_codigo", "iga_id"],
-        });
-
-        if (!informe) return false;
-
-        const actualizado = await InformeGuardaAlmancen.update(
-          { iga_cli_id: cliente_nuevo },
-
-          {
-            where: {
-              iga_codigo: informe.iga_codigo,
-            },
-          }
+      } else {
+        throw new Error(
+          `No se actualizó el informe con iga_codigo: ${informe.iga_codigo}`
         );
-        if (actualizado == 0) {
-          throw new Error(
-            `No se encontró o no se pudo actualizar el informe con iga_codigo: ${informe.iga_codigo}`
-          );
-        }
+      }
+      break;
 
-        if (actualizado == 1) {
-          await helpercontroller.CrearPdfInforme({
-            req,
-            res,
-            next,
-            id: informe.iga_id,
-          });
-        } else {
-          throw new Error(
-            `No se actualizó el informe con iga_codigo: ${informe.iga_codigo}`
-          );
-        }
-        break;
+    default:
+      resultado = false;
+  }
 
-      default:
-        resultado = false;
-    }
-
-    return resultado;
-  
+  return resultado;
 }
 async function data_actualizar_aduana({
   req,
@@ -758,111 +750,72 @@ async function data_actualizar_aduana({
   aduana_nuevo,
   id_carta,
 }) {
+  let resultado = false;
+  let cac_id = id_carta;
+
   try {
-    let resultado = false;
-    let cac_id = id_carta;
+    // Actualizar la carta
+    const [actualizarCarta] = await CAceptacion.update(
+      { cac_adu_id: aduana_nuevo },
+      { where: { cac_id } }
+    );
 
-    switch (tipo) {
-      case "Carta":
-        const [actualizarCarta] = await CAceptacion.update(
-          { cac_adu_id: aduana_nuevo },
-
-          { where: { cac_id } }
-        );
-        if (actualizarCarta == 0) {
-          throw new Error(
-            `No se actualizó la carta con cac_adu_id: ${aduana_nuevo}`
-          );
-        }
-
-        resultado = await helpercontroller.CrearPDFCA({
-          req,
-          res,
-          next,
-          id: cac_id,
-        });
-
-        if (resultado === true) {
-          throw new Error(
-            `No se actualizó el pdf de informe con cac_id: ${cac_id}`
-          );
-        }
-        const informes = await InformeGuardaAlmancen.findAll({
-          where: { iga_cac_id: cac_id },
-
-          attributes: ["iga_codigo", "iga_id"],
-        });
-
-        if (!informes || informes.length === 0) {
-          throw new Error(
-            `No se encontraron informes relacionados con cac_id: ${cac_id}`
-          );
-        }
-        let actualizaciones = 0;
-
-        for (const informe of informes) {
-          resultado = await helpercontroller.CrearPdfInforme({
-            req,
-            res,
-            next,
-            id: informe.iga_id,
-          });
-
-          if (resultado === true) {
-            actualizaciones++;
-          }
-        }
-        if (actualizaciones === 0) {
-          throw new Error(
-            `No se actualizó ningún informe para cac_id: ${cac_id}`
-          );
-        }
-
-        break;
-
-      case "Informe":
-        const actualizarCarta2 = await CAceptacion.update(
-          { cac_adu_id: aduana_nuevo },
-
-          { where: { cac_id } }
-        );
-
-        if (actualizarCarta2 == 1) {
-          resultado = await helpercontroller.CrearPDFCA({
-            req,
-            res,
-            next,
-            id: cac_id,
-          });
-
-          if (resultado === true) {
-            const informes = await InformeGuardaAlmancen.findAll({
-              where: { iga_cac_id: cac_id },
-
-              attributes: ["iga_codigo", "iga_id"],
-            });
-
-            for (const informe of informes) {
-              resultado = await helpercontroller.CrearPdfInforme({
-                req,
-                res,
-                next,
-                id: informe.iga_id,
-              });
-            }
-          }
-        }
-        break;
-
-      default:
-        resultado = false;
+    if (actualizarCarta === 0) {
+      throw new Error(`No se actualizó la carta con cac_id: ${cac_id}`);
     }
 
-    return resultado;
+    // Crear PDF de la carta
+    const actualizarPDF = await helpercontroller.CrearPDFCA({
+      req,
+      res,
+      next,
+      id: cac_id,
+    });
+
+    if (actualizarPDF === false) {
+      throw new Error(
+        `No se actualizó el PDF de la carta con cac_id: ${cac_id}`
+      );
+    }
+
+    // Obtener informes relacionados
+    const informes = await InformeGuardaAlmancen.findAll({
+      where: { iga_cac_id: cac_id },
+      attributes: ["iga_codigo", "iga_id"],
+    });
+
+    if (!informes || informes.length === 0) {
+      throw new Error(
+        `No se encontraron informes relacionados con cac_id: ${cac_id}`
+      );
+    }
+
+    // Generar PDF por cada informe
+    let actualizaciones = 0;
+    for (const informe of informes) {
+      const actualizado = await helpercontroller.CrearPdfInforme({
+        req,
+        res,
+        next,
+        id: informe.iga_id,
+      });
+
+      if (actualizado === true) {
+        actualizaciones++;
+      }
+    }
+
+    if (actualizaciones === 0) {
+      throw new Error(`No se actualizó ningún informe para cac_id: ${cac_id}`);
+    }
+
+    resultado = true;
   } catch (error) {
-    console.error("Error en data_actualizar_aduana:", error.message);
-    return false;
+    next(error);
+    resultado = false;
   }
+
+  return resultado;
 }
 
 async function data_actualizar_transportista({
@@ -884,8 +837,6 @@ async function data_actualizar_transportista({
       { where: { cac_id } }
     );
 
-    
-
     if (actualizarCarta === 0) {
       throw new Error(`No se actualizó la carta con cac_id: ${cac_id}`);
     }
@@ -897,7 +848,6 @@ async function data_actualizar_transportista({
       next,
       id: cac_id,
     });
-   
 
     if (!pdfCA) {
       throw new Error(`No se generó el PDF para la carta con id: ${cac_id}`);
@@ -910,7 +860,9 @@ async function data_actualizar_transportista({
     });
 
     if (!informes || informes.length === 0) {
-      throw new Error(`No se encontraron informes relacionados con la carta: ${cac_id}`);
+      throw new Error(
+        `No se encontraron informes relacionados con la carta: ${cac_id}`
+      );
     }
 
     // Regenerar PDF por cada informe
@@ -926,11 +878,12 @@ async function data_actualizar_transportista({
     }
 
     if (totalActualizados === 0) {
-      throw new Error(`No se generaron los PDF de los informes relacionados con carta: ${cac_id}`);
+      throw new Error(
+        `No se generaron los PDF de los informes relacionados con carta: ${cac_id}`
+      );
     }
 
     resultado = true;
-
   } else if (tipo === "Informe") {
     // Solo actualiza la carta relacionada al informe
     const [actualizarCarta] = await CAceptacion.update(
@@ -968,14 +921,12 @@ async function data_actualizar_transportista({
         id: informe.iga_id,
       });
     }
-
   } else {
     throw new Error(`Tipo no reconocido: ${tipo}`);
   }
 
   return resultado;
 }
-
 
 async function Actualizar_contenedor({
   req,
@@ -986,99 +937,67 @@ async function Actualizar_contenedor({
   contenedor_nuevo,
   id_carta,
 }) {
-  let resultado = false;
-  let cac_id = id_carta;
+  let cac_id = id_carta
+  try {
+    // Actualizar la carta
+    const [actualizarCarta] = await CAceptacion.update(
+      { cac_contenedor: contenedor_nuevo },
+      { where: { cac_id } }
+    );
 
-  switch (tipo) {
-    case "Carta":
-      const actualizarCarta = await CAceptacion.update(
-        { cac_contenedor: contenedor_nuevo },
+    if (actualizarCarta === 0) {
+      throw new Error(`No se actualizó la carta con cac_id: ${cac_id}`);
+    }
 
-        { where: { cac_id } }
+    // Crear PDF de la carta
+    const actualizarPDF = await helpercontroller.CrearPDFCA({
+      req,
+      res,
+      next,
+      id: cac_id,
+    });
+
+    if (actualizarPDF === false) {
+      throw new Error(
+        `No se actualizó el PDF de la carta con cac_id: ${cac_id}`
       );
-      if (actualizarCarta == 0) {
-        throw new Error(`No se actualizó la carta con cac_adu_id: ${cac_id}`);
-      }
+    }
 
-      const actualizarCarta1 = await helpercontroller.CrearPDFCA({
+    // Obtener informes relacionados
+    const informes = await InformeGuardaAlmancen.findAll({
+      where: { iga_cac_id: cac_id },
+      attributes: ["iga_codigo", "iga_id"],
+    });
+
+    if (!informes || informes.length === 0) {
+      throw new Error(
+        `No se encontraron informes relacionados con cac_id: ${cac_id}`
+      );
+    }
+
+    // Generar PDF por cada informe
+    let actualizaciones = 0;
+    for (const informe of informes) {
+      const actualizado = await helpercontroller.CrearPdfInforme({
         req,
         res,
         next,
-        id: cac_id,
+        id: informe.iga_id,
       });
 
-      if (actualizarCarta1 == false) {
-        throw new Error(
-          `No se actualizó el pdf de informe con cac_id: ${cac_id}`
-        );
-      }
-
-      const informes = await InformeGuardaAlmancen.findAll({
-        where: { iga_cac_id: cac_id },
-
-        attributes: ["iga_codigo", "iga_id"],
-      });
-
-      if (!informes || informes.length === 0) {
-        throw new Error(
-          `No se encontraron informes relacionados con cac_id: ${cac_id}`
-        );
-      }
-
-      let actualizaciones = 0;
-      for (const informe of informes) {
-        resultado = await helpercontroller.CrearPdfInforme({
-          req,
-          res,
-          next,
-          id: informe.iga_id,
-        });
+      if (actualizado === true) {
         actualizaciones++;
       }
-      if (actualizaciones === 0) {
-        throw new Error(
-          `No se actualizó ningún informe para cac_id: ${cac_id}`
-        );
-      }
+    }
 
-      break;
+    if (actualizaciones === 0) {
+      throw new Error(`No se actualizó ningún informe para cac_id: ${cac_id}`);
+    }
 
-    case "Informe":
-      const actualizarCarta2 = await CAceptacion.update(
-        { cac_tra_id: contenedor_nuevo },
-
-        { where: { cac_id } }
-      );
-
-      if (actualizarCarta2 == 1) {
-        resultado = await helpercontroller.CrearPDFCA({
-          req,
-          res,
-          next,
-          id: cac_id,
-        });
-
-        if (resultado === true) {
-          const informes = await InformeGuardaAlmancen.findAll({
-            where: { iga_cac_id: cac_id },
-
-            attributes: ["iga_codigo", "iga_id"],
-          });
-
-          for (const informe of informes) {
-            resultado = await helpercontroller.CrearPdfInforme({
-              req,
-              res,
-              next,
-              id: informe.iga_id,
-            });
-          }
-        }
-      }
-      break;
-
-    default:
-      resultado = false;
+    resultado = true;
+  } catch (error) {
+    next(error);
+    resultado = false;
   }
 
   return resultado;
