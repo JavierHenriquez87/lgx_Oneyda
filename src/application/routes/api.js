@@ -38,6 +38,7 @@ const servicioscontroller = require('../controllers/servicioscontroller');
 const panelcorreccionescontroller = require('../controllers/panelcorreccionescontroller');
 const documentossalidascontroller = require('../controllers/documentossalidascontroller');
 const inventariocontroller = require('../controllers/inventariocontroller');
+const facturacioncontroller = require('../controllers/facturacioncontroller');
 const { ro } = require('date-fns/locale');
 
 //===========================================================================
@@ -307,7 +308,7 @@ router.post('/panelcorrecciones/ActualizarPaisDestino', verifyToken, panelcorrec
 //*para obtener los datos del cliente seria esta misma == > panelcorrecciones/ConsultarDocumento
 router.post('/panelcorrecciones/CambioCliente', verifyToken,panelcorreccionescontroller.CambioCliente);
 //*para obtener los datos del cliente seria esta misma == > panelcorrecciones/ConsultarDocumento
-router.post('/panelcorrecciones/CambioTransportista', verifyToken, panelcorreccionescontroller.CambioTransportista);
+router.post('/panelcorrecciones/CambioTransportista',  panelcorreccionescontroller.CambioTransportista);
 //*para obtener los datos del cliente seria esta misma == > panelcorrecciones/ConsultarDocumento
 router.post('/panelcorrecciones/CambioAduana', verifyToken, panelcorreccionescontroller.CambioAduana);
 
@@ -335,6 +336,34 @@ router.post('/inventario/SaldoIngresosFecha',verifyToken, inventariocontroller.S
 //     "fecha_final":"2025-07-08",
 //     "id_cliente":11084
 // }
+
+//===========================================================================
+// TODO: FACTURACION
+//===========================================================================
+
+
+router.get('/facturacion/ObtenerCorrelativos', verifyToken,facturacioncontroller.ObtenerCorrelativos);
+
+
+router.post('/facturacion/AgregarCorrelativo', verifyToken,facturacioncontroller.AgregarCorrelativo);
+// {
+//     "rango_inicio":1, 
+//     "rango_final":500, 
+//     "estado":1, // seria 0 = inactivo y 1 = activo
+//     "tipo":2,
+//     "anio":2025
+// }
+
+router.post('/facturacion/ActualizarCorrelativo', verifyToken,facturacioncontroller.ActualizarCorrelativo);
+// {    
+//     "corfa_id": 49, // id del correlativo
+//     "rango_inicio":1, 
+//     "rango_final":500, 
+//     "estado":1
+// }
+
+router.get('/facturacion/ObtenerTipoFactura',verifyToken, facturacioncontroller.ObtenerTipoFactura);
+
 
 //===========================================================================
 module.exports = router;

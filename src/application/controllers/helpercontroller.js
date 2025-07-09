@@ -270,6 +270,7 @@ class helpercontroller {
                 where: {
                     tra_id: datos_carta.cac_tra_id,
                 },
+               
             });
             
 

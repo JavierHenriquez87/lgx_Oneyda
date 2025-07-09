@@ -875,7 +875,8 @@ class panelcorreccionescontroller {
       jsonResponse = {
         status: 200,
         message: "Success",
-        response: "Se actualizo el dato correctamente",
+        //response: "Se actualizo el dato correctamente",
+        response: data
 
       };
     } catch (error) {
