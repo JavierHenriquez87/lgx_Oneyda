@@ -318,13 +318,13 @@ router.post('/panelcorrecciones/CambioAduana', verifyToken, panelcorreccionescon
 router.post('/panelcorrecciones/CambioContenedor', verifyToken, panelcorreccionescontroller.CambioContenedor);
 
 
-router.post('/panelcorrecciones/informacionDocTransporte', panelcorreccionescontroller.informacionDocTransporte);
+router.post('/panelcorrecciones/informacionDocTransporte',verifyToken,panelcorreccionescontroller.informacionDocTransporte);
 // {
 //     "documento": "152-2022",
 //     "tipo": "Carta"
 // }
 
-router.post('/panelcorrecciones/CambioDocumentoTransporte', panelcorreccionescontroller.CambioDocumentoTransporte);
+router.post('/panelcorrecciones/CambioDocumentoTransporte', verifyToken,panelcorreccionescontroller.CambioDocumentoTransporte);
 // {
 //     "documento" : "152-2022",
 //     "tipo" : "Carta",
@@ -337,7 +337,18 @@ router.post('/panelcorrecciones/CambioDocumentoTransporte', panelcorreccionescon
 // }
 
 //*para obtener los datos del peso seria esta misma == > panelcorrecciones/informacionDocTransporte
-router.post('/panelcorrecciones/CambioPeso', panelcorreccionescontroller.CambioPeso);
+router.post('/panelcorrecciones/CambioPeso',verifyToken,panelcorreccionescontroller.CambioPeso);
+// {
+//     "documento" : "152-2022",
+//     "tipo" : "Carta",
+//     "cad_id" : 34370,
+//     "Peso_nuevo" : "841",
+//     "Peso_antiguo" : "831",
+//     "motivoCorreccion" : "Cambio de fecha",
+//     "solicitante" : 309
+
+// }
+
 
 //===========================================================================
 // TODO: INVENTARIO

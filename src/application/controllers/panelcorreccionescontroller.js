@@ -1045,16 +1045,17 @@ class panelcorreccionescontroller {
 
     try {
       const { documento, tipo } = req.body;
-
-      const data = await panelcorrecciones.DataDocTransporte({
-        documento,
-        tipo,
-      });
+      let data, total;
+      ({ data, total } = await panelcorrecciones.DataDocTransporte({
+              documento,
+              tipo,
+            }));
 
       jsonResponse = {
         status: 200,
         message: "Success",
         response: data,
+        peso_total:total
       };
     } catch (error) {
       next(error);
@@ -1217,7 +1218,7 @@ class panelcorreccionescontroller {
         next,
         documento,
         tipo,
-        DocTransporte_nuevo,
+        Peso_nuevo,
         cad_id,
       });
       if (data) {
@@ -1226,12 +1227,23 @@ class panelcorreccionescontroller {
           log,
         });
       }
-
-      jsonResponse = {
+      if(data == true){
+        jsonResponse = {
         status: 200,
         message: "Success",
         response: "Se actualizo el dato correctamente",
+     
       };
+      }
+        jsonResponse = {
+        status: 500,
+        message: "error",
+        response: "No se  actualizo el dato correctamente",
+      
+      };
+      
+
+      
     } catch (error) {
       next(error);
       jsonResponse = {

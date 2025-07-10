@@ -4,6 +4,7 @@ const CAceptacion = require("../models/CartaAceptacionModel");
 const DetalleCA = require("../models/DetalleCartaAceptacionModel");
 const InformeGuardaAlmancen = require("../models/InformeGuardaAlmacenModel");
 const Salidas = require("../models/SalidasModel");
+const DetalleGuardaAlmancen = require("../models/DetalleInformeGuardaAlmacenModel");
 const { Op } = require("sequelize");
 
 async function data_busquedaPorCarta({ documento, tipo }) {
@@ -698,7 +699,7 @@ async function data_actualizar_cliente({
         );
       }
 
-      resultado = true; 
+      resultado = true;
       break;
 
     case "Informe":
@@ -729,7 +730,7 @@ async function data_actualizar_cliente({
         id: informe.iga_id,
       });
 
-      resultado = true; 
+      resultado = true;
       break;
 
     default:
@@ -1088,8 +1089,34 @@ async function DataDocTransporte({ documento, tipo }) {
       de_lgx: row.de_lgx,
     });
   });
+  
+  let cad_id = datos[0].cad_id;
 
-  return datos;
+  const [sumatoriaCad] = await db.query(`
+    SELECT 
+      SUM(cad_cantbultos) AS bultos,
+      SUM(cad_peso) AS peso,
+      SUM(cad_cbm) AS volumen,
+      cad_cac_id AS carta
+    FROM clg_cad_detalleaceptacion
+    WHERE cad_cac_id = (
+      SELECT cad_cac_id
+      FROM clg_cad_detalleaceptacion
+      WHERE cad_id = ${cad_id}
+    )
+    GROUP BY cad_cac_id;
+  `);
+  
+
+  if (!sumatoriaCad || sumatoriaCad.length === 0) {
+    throw new Error(
+      `No se encontro sumatoria para  cac_id: ${cad_id}`
+    );
+  }
+
+  let totalCad = sumatoriaCad[0]?.peso;
+
+  return {data:datos,total:totalCad};
 }
 
 async function Actualizar_DocTransporte({
@@ -1161,7 +1188,7 @@ async function Actualizar_DocTransporte({
     throw new Error(`La variable igaId es null o indefinida`);
   }
 
- //actualizar informe
+  //actualizar informe
   const [actualizadoInforme] = await InformeGuardaAlmancen.update(
     { iga_doctransporte: DocTransporte_nuevo },
     { where: { iga_id: igaId } }
@@ -1195,15 +1222,52 @@ async function Actualizar_Peso({
   next,
   documento,
   tipo,
-  DocTransporte_nuevo,
+  Peso_nuevo,
   cad_id,
 }) {
   let resultado = false;
 
   //actualizar el detalle de la carta
-  const [actualizarCarta] = await DetalleCA.update(
-    { cad_bl: DocTransporte_nuevo },
+  const [actualizarDCarta] = await DetalleCA.update(
+    { cad_peso: Peso_nuevo },
     { where: { cad_id } }
+  );
+
+  if (actualizarDCarta === 0) {
+    throw new Error(
+      `No se encontró o no se pudo actualizar la carta con cad_id: ${cad_id}`
+    );
+  }
+  
+  //obtenemos el peso total de nuevo para actualizar la carta con la sumatoria o resta del peso que se haya cambiado
+  const [sumatoriaCad] = await db.query(`
+    SELECT 
+      SUM(cad_cantbultos) AS bultos,
+      SUM(cad_peso) AS peso,
+      SUM(cad_cbm) AS volumen,
+      cad_cac_id AS carta
+    FROM clg_cad_detalleaceptacion
+    WHERE cad_cac_id = (
+      SELECT cad_cac_id
+      FROM clg_cad_detalleaceptacion
+      WHERE cad_id = ${cad_id}
+    )
+    GROUP BY cad_cac_id;
+  `);
+  
+
+  if (!sumatoriaCad || sumatoriaCad.length === 0) {
+    throw new Error(
+      `No se encontro sumatoria para  cac_id: ${cad_id}`
+    );
+  }
+
+  let totalCad = sumatoriaCad[0]?.peso;
+  let cac_id =  sumatoriaCad[0]?.carta;
+  // se mandan los datos obtenidos de la sumatoria, para tener el nuevo peso en la carta
+  const [actualizarCarta] = await CAceptacion.update(
+    { cac_totalpeso: totalCad },
+    { where: { cac_id } }
   );
 
   if (actualizarCarta === 0) {
@@ -1233,7 +1297,7 @@ async function Actualizar_Peso({
     id: cad_cac_id,
   });
 
-  if (!actualizarCartapdf) {
+  if (actualizarCartapdf == false) {
     throw new Error(
       `No se pudo crear el PDF de la carta con cad_cac_id: ${cad_cac_id}`
     );
@@ -1258,14 +1322,17 @@ async function Actualizar_Peso({
     throw new Error(`La variable igaId es null o indefinida`);
   }
 
- //actualizar informe
-  const [actualizadoInforme] = await InformeGuardaAlmancen.update(
-    { iga_doctransporte: DocTransporte_nuevo },
-    { where: { iga_id: igaId } }
-  );
+  //actualizar el peso en detalle informe guardaalmacen
 
-  if (actualizadoInforme === 0) {
-    throw new Error(`No se actualizó el informe: ${igaId}`);
+   const [actualizarDInforme] = await DetalleGuardaAlmancen.update(
+    { dga_peso: Peso_nuevo },
+    { where: { dga_iga_id: igaId } }
+  );
+  
+  if (actualizarDInforme === 0) {
+    throw new Error(
+      `No se encontró o no se pudo actualizar el detalle informe con igaId: ${cad_id}`
+    );
   }
 
   // generar PDF del informe
@@ -1276,7 +1343,8 @@ async function Actualizar_Peso({
     id: igaId,
   });
 
-  if (!Actualizadopdf) {
+
+  if (Actualizadopdf == false) {
     throw new Error(
       `No se pudo crear el PDF del informe con cad_cac_id: ${cad_cac_id}`
     );
@@ -1285,7 +1353,6 @@ async function Actualizar_Peso({
   resultado = true;
   return resultado;
 }
-
 
 module.exports = {
   data_busquedaPorCarta,
@@ -1303,5 +1370,5 @@ module.exports = {
   Actualizar_contenedor,
   DataDocTransporte,
   Actualizar_DocTransporte,
-  Actualizar_Peso
+  Actualizar_Peso,
 };
