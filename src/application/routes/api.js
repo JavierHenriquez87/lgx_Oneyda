@@ -295,7 +295,7 @@ router.post('/reportesinternos/reporteFacturacionRegiClieCons', verifyToken, rep
 // TODO: PANEL DE CORRECCIONES
 //===========================================================================
 router.post('/panelcorrecciones/obtenerUsersCorrecciones', verifyToken, panelcorreccionescontroller.ObtenerUsuariosCorrecciones);
-router.post('/panelcorrecciones/ConsultarDocumento', verifyToken, panelcorreccionescontroller.ConsultarDocumento);
+router.post('/panelcorrecciones/ConsultarDocumento', panelcorreccionescontroller.ConsultarDocumento);
 //! Cambio de Fecha
 router.post('/panelcorrecciones/ObtenerDatosDocumento', verifyToken, panelcorreccionescontroller.ObtenerDatosDocumento);
 router.post('/panelcorrecciones/CambiarFechaDocumento', verifyToken, panelcorreccionescontroller.CambiarFechaDocumento);
@@ -307,19 +307,43 @@ router.post('/panelcorrecciones/ActualizarPaisDestino', verifyToken, panelcorrec
 //!
 //*para obtener los datos del cliente seria esta misma == > panelcorrecciones/ConsultarDocumento
 router.post('/panelcorrecciones/CambioCliente', verifyToken,panelcorreccionescontroller.CambioCliente);
-//*para obtener los datos del cliente seria esta misma == > panelcorrecciones/ConsultarDocumento
+
+//*para obtener los datos del transportista seria esta misma == > panelcorrecciones/ConsultarDocumento
 router.post('/panelcorrecciones/CambioTransportista',  panelcorreccionescontroller.CambioTransportista);
-//*para obtener los datos del cliente seria esta misma == > panelcorrecciones/ConsultarDocumento
+
+//*para obtener los datos de la aduana seria esta misma == > panelcorrecciones/ConsultarDocumento
 router.post('/panelcorrecciones/CambioAduana', verifyToken, panelcorreccionescontroller.CambioAduana);
 
+//*para obtener los datos del contenedor seria esta misma == > panelcorrecciones/ConsultarDocumento
 router.post('/panelcorrecciones/CambioContenedor', verifyToken, panelcorreccionescontroller.CambioContenedor);
+
+
+router.post('/panelcorrecciones/informacionDocTransporte', panelcorreccionescontroller.informacionDocTransporte);
+// {
+//     "documento": "152-2022",
+//     "tipo": "Carta"
+// }
+
+router.post('/panelcorrecciones/CambioDocumentoTransporte', panelcorreccionescontroller.CambioDocumentoTransporte);
+// {
+//     "documento" : "152-2022",
+//     "tipo" : "Carta",
+//     "cad_id" : 34370,
+//     "DocTransporte_nuevo" : "ELS-10245",
+//     "DocTransporte_antiguo" : "ELS-10248",
+//     "motivoCorreccion" : "Cambio de fecha",
+//     "solicitante" : 309
+
+// }
+
+//*para obtener los datos del peso seria esta misma == > panelcorrecciones/informacionDocTransporte
+router.post('/panelcorrecciones/CambioPeso', panelcorreccionescontroller.CambioPeso);
 
 //===========================================================================
 // TODO: INVENTARIO
 //===========================================================================
 
-//router.post('/inventario/SaldoIngresos', verifyToken, inventariocontroller.obtenerSaldoIngresos);
-router.post('/inventario/SaldoIngresosGeneral',verifyToken, inventariocontroller.SaldoIngresosGeneral);
+router.post('/inventario/SaldoIngresos',verifyToken, inventariocontroller.SaldoIngresosGeneral);
 // {
 //     "tipo_documento": "Informe",
 //     "datobusqueda":"2990052025AS001",

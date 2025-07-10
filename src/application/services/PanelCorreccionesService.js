@@ -93,24 +93,27 @@ async function data_busquedaPorCarta({ documento, tipo }) {
   const datos = [];
 
   rows.forEach((row, index) => {
-    let carta_pdf = row.de_lgx
-      ? row.cartaArchivo
-      : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/cartas_aceptacion/" +
-        row.cartaArchivo;
-    let informe_pdf = row.de_lgx
-      ? row.informeArchivo
-      : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/" +
-        row.informeArchivo;
+    let carta_pdf =
+      row.de_lgx == 1 || row.cartaArchivo?.startsWith("https")
+        ? row.cartaArchivo
+        : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/cartas_aceptacion/" +
+          row.cartaArchivo;
+    let informe_pdf =
+      row.de_lgx == 1 || row.informeArchivo?.startsWith("https")
+        ? row.informeArchivo
+        : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/" +
+          row.informeArchivo;
     let salidas_pdf = row.salida
       ? "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_salidas_aduana/" +
         row.salida +
         ".pdf"
       : row.salida;
 
-    let manifiesto_pdf = row.de_lgx
-      ? row.manifiestoPdf
-      : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/cartas_aceptacion/" +
-        row.manifiestoPdf;
+    let manifiesto_pdf =
+      row.de_lgx == 1 || row.manifiestoPdf?.startsWith("https")
+        ? row.manifiestoPdf
+        : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/cartas_aceptacion/" +
+          row.manifiestoPdf;
 
     datos.push({
       index: index + 1,
@@ -164,10 +167,10 @@ async function data_fecha_carta({ documento }) {
   const datos = [];
 
   rows.forEach((row, index) => {
-    let carta_pdf = row.de_lgx
-      ? row.cac_pdf
-      : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/cartas_aceptacion/" +
-        row.cac_pdf;
+    let carta_pdf =
+      row.de_lgx == 1 || row.cac_pdf?.startsWith("http")
+        ? row.cac_pdf
+        : `https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/cartas_aceptacion/${row.cac_pdf}`;
 
     datos.push({
       index: index + 1,
@@ -197,10 +200,10 @@ async function data_fecha_informe({ documento }) {
   const datos = [];
 
   rows.forEach((row, index) => {
-    let informe_pdf = row.de_lgx
-      ? row.iga_archivo
-      : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/" +
-        row.iga_archivo;
+    let informe_pdf =
+      row.de_lgx == 1 || row.iga_archivo?.startsWith("http")
+        ? row.iga_archivo
+        : `https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/${row.iga_archivo}`;
 
     datos.push({
       index: index + 1,
@@ -336,10 +339,9 @@ async function data_cambio_destino({ documento, tipo }) {
 
   rows.forEach((row, index) => {
     let carta_pdf =
-      row.de_lgx != 0
+      row.de_lgx == 1 || row.cac_pdf?.startsWith("http")
         ? row.cac_pdf
-        : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/cartas_aceptacion/" +
-          row.cac_pdf;
+        : `https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/cartas_aceptacion/${row.cac_pdf}`;
 
     datos.push({
       index: index + 1,
@@ -612,12 +614,12 @@ async function data_actualizar_cliente({
 
   switch (tipo) {
     case "Carta":
-      const actualizarCarta = await DetalleCA.update(
+      const [actualizarCarta] = await DetalleCA.update(
         { cad_cli_id: cliente_nuevo },
         { where: { cad_id } }
       );
 
-      if (actualizarCarta == 0) {
+      if (actualizarCarta === 0) {
         throw new Error(
           `No se encontró o no se pudo actualizar la carta con cad_id: ${cad_id}`
         );
@@ -650,20 +652,19 @@ async function data_actualizar_cliente({
         );
       }
 
-      // Consultar informe relacionado usando parámetro para seguridad
-      const [informes] = await db.query(
-        `SELECT
-              c.cac_id AS cacId,
-              c.cac_numero AS carta,
-              i.iga_id AS igaId,
-              i.iga_codigo AS informe,
-              i.iga_estado AS estado
-            FROM clg_cac_aceptacion c
-            INNER JOIN clg_cad_detalleaceptacion d ON c.cac_id = d.cad_cac_id
-            LEFT JOIN clg_iga_informeguardalmacen i ON i.iga_cad_id = d.cad_id
-            WHERE d.cad_id = ${cad_id} AND (i.iga_estado IS NULL OR i.iga_estado = 1);
-          `
-      );
+      // Buscar informe relacionado
+      const [informes] = await db.query(`
+        SELECT
+          c.cac_id AS cacId,
+          c.cac_numero AS carta,
+          i.iga_id AS igaId,
+          i.iga_codigo AS informe,
+          i.iga_estado AS estado
+        FROM clg_cac_aceptacion c
+        INNER JOIN clg_cad_detalleaceptacion d ON c.cac_id = d.cad_cac_id
+        LEFT JOIN clg_iga_informeguardalmacen i ON i.iga_cad_id = d.cad_id
+        WHERE d.cad_id = ${cad_id} AND (i.iga_estado IS NULL OR i.iga_estado = 1);
+      `);
 
       if (!informes || informes.length === 0) {
         throw new Error(`No se encontró informe para cad_id: ${cad_id}`);
@@ -673,16 +674,17 @@ async function data_actualizar_cliente({
       if (!igaId) {
         throw new Error(`La variable igaId es null o indefinida`);
       }
+
       const actualizadoInforme = await InformeGuardaAlmancen.update(
         { iga_cli_id: cliente_nuevo },
         { where: { iga_id: igaId } }
       );
 
-      if (actualizadoInforme == 0) {
-        throw new Error(`No se actualizo el informe: ${igaId}`);
+      if (actualizadoInforme === 0) {
+        throw new Error(`No se actualizó el informe: ${igaId}`);
       }
 
-      // Crear PDF informe
+      // Crear PDF del informe
       const Actualizadopdf = await helpercontroller.CrearPdfInforme({
         req,
         res,
@@ -690,12 +692,13 @@ async function data_actualizar_cliente({
         id: igaId,
       });
 
-      if (Actualizadopdf == false) {
+      if (Actualizadopdf === false) {
         throw new Error(
           `No se pudo crear el PDF del informe con cad_cac_id: ${cad_cac_id}`
         );
       }
 
+      resultado = true; 
       break;
 
     case "Informe":
@@ -704,35 +707,29 @@ async function data_actualizar_cliente({
         attributes: ["iga_cac_id", "iga_codigo", "iga_id"],
       });
 
-      if (!informe) return false;
+      if (!informe) {
+        throw new Error(`No se encontró informe con iga_codigo: ${documento}`);
+      }
 
       const actualizado = await InformeGuardaAlmancen.update(
         { iga_cli_id: cliente_nuevo },
-
-        {
-          where: {
-            iga_codigo: informe.iga_codigo,
-          },
-        }
+        { where: { iga_codigo: informe.iga_codigo } }
       );
-      if (actualizado == 0) {
+
+      if (actualizado === 0) {
         throw new Error(
           `No se encontró o no se pudo actualizar el informe con iga_codigo: ${informe.iga_codigo}`
         );
       }
 
-      if (actualizado == 1) {
-        await helpercontroller.CrearPdfInforme({
-          req,
-          res,
-          next,
-          id: informe.iga_id,
-        });
-      } else {
-        throw new Error(
-          `No se actualizó el informe con iga_codigo: ${informe.iga_codigo}`
-        );
-      }
+      await helpercontroller.CrearPdfInforme({
+        req,
+        res,
+        next,
+        id: informe.iga_id,
+      });
+
+      resultado = true; 
       break;
 
     default:
@@ -741,6 +738,7 @@ async function data_actualizar_cliente({
 
   return resultado;
 }
+
 async function data_actualizar_aduana({
   req,
   res,
@@ -937,7 +935,7 @@ async function Actualizar_contenedor({
   contenedor_nuevo,
   id_carta,
 }) {
-  let cac_id = id_carta
+  let cac_id = id_carta;
   try {
     // Actualizar la carta
     const [actualizarCarta] = await CAceptacion.update(
@@ -1003,6 +1001,292 @@ async function Actualizar_contenedor({
   return resultado;
 }
 
+async function DataDocTransporte({ documento, tipo }) {
+  let where = `
+  `;
+  switch (tipo) {
+    case "Carta":
+      where = `a.cac_numero = '${documento}'`;
+      break;
+    case "Informe":
+      where = `i.iga_codigo = '${documento}'`;
+      break;
+    default:
+      where = ``;
+      break;
+  }
+
+  const sql = `
+    SELECT
+      d.cad_id ,
+      a.cac_numero ,
+      a.cac_id,
+      a.cac_pdf ,
+      i.iga_archivo ,
+      IFNULL(i.iga_id, 'No') iga_id,
+      c.cli_nombre ,
+      a.cac_guardalmacen ,
+      i.iga_codigo ,
+      d.cad_bl docTransporte,
+      td.tdt_documento ,
+      d.cad_cantbultos bultos,
+      a.cac_totalbl totalBultosCarta,
+      d.cad_peso ,
+      d.cad_cbm volumenCad,
+      a.cac_totalpeso pesoTotal,
+      a.cac_totalcbm volumenTotal,
+      dg.dga_manifestados bultosManifestados,
+      dg.dga_recibidos bultosRecibidos,
+      a.de_lgx 
+    FROM
+    clg_cac_aceptacion a
+    INNER JOIN clg_cad_detalleaceptacion d ON a.cac_id = d.cad_cac_id
+    INNER JOIN clg_tdt_tipodoctransporte td ON td.tdt_id = a.cac_tdt_id
+    LEFT JOIN clg_iga_informeguardalmacen i ON d.cad_id = i.iga_cad_id
+    LEFT JOIN clg_dga_detallesguardalmacen dg ON dg.dga_iga_id = i.iga_id
+    INNER JOIN clg_cli_clientes c ON c.cli_id = d.cad_cli_id
+    WHERE
+    ${where}
+    AND (i.iga_estado is null OR i.iga_estado = 1)
+  `;
+
+  const [rows] = await db.query(sql);
+  const datos = [];
+
+  rows.forEach((row, index) => {
+    let carta_pdf =
+      row.de_lgx == 1 || row.cac_pdf?.startsWith("https")
+        ? row.cac_pdf
+        : `https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/cartas_aceptacion/${row.cac_pdf}`;
+
+    let informe_pdf =
+      row.de_lgx == 1 || row.iga_archivo?.startsWith("https")
+        ? row.iga_archivo
+        : `https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/${row.iga_archivo}`;
+
+    datos.push({
+      index: index + 1,
+      cac_id: row.cac_id,
+      cad_id: row.cad_id,
+      cac_numero: row.cac_numero,
+      cac_pdf: carta_pdf,
+      iga_archivo: informe_pdf,
+      iga_id: row.iga_id,
+      cli_nombre: row.cli_nombre,
+      cac_guardalmacen: row.cac_guardalmacen,
+      iga_codigo: row.iga_codigo,
+      docTransporte: row.docTransporte,
+      tdt_documento: row.tdt_documento,
+      bultos: row.bultos,
+      totalBultosCarta: row.totalBultosCarta,
+      cad_peso: row.cad_peso,
+      volumenCad: row.volumenCad,
+      pesoTotal: row.pesoTotal,
+      volumenTotal: row.volumenTotal,
+      bultosManifestados: row.bultosManifestados,
+      bultosRecibidos: row.bultosRecibidos,
+      de_lgx: row.de_lgx,
+    });
+  });
+
+  return datos;
+}
+
+async function Actualizar_DocTransporte({
+  req,
+  res,
+  next,
+  documento,
+  tipo,
+  DocTransporte_nuevo,
+  cad_id,
+}) {
+  let resultado = false;
+
+  //actualizar el detalle de la carta
+  const [actualizarCarta] = await DetalleCA.update(
+    { cad_bl: DocTransporte_nuevo },
+    { where: { cad_id } }
+  );
+
+  if (actualizarCarta === 0) {
+    throw new Error(
+      `No se encontró o no se pudo actualizar la carta con cad_id: ${cad_id}`
+    );
+  }
+
+  //obtener id de la carta
+  const registro = await DetalleCA.findOne({
+    where: { cad_id },
+    attributes: ["cad_cac_id"],
+  });
+
+  const cad_cac_id = registro?.cad_cac_id;
+  if (!cad_cac_id) {
+    throw new Error(
+      `No se encontró cad_cac_id relacionado a la carta con cad_id: ${cad_id}`
+    );
+  }
+
+  // generar PDF de la carta
+  const actualizarCartapdf = await helpercontroller.CrearPDFCA({
+    req,
+    res,
+    next,
+    id: cad_cac_id,
+  });
+
+  if (!actualizarCartapdf) {
+    throw new Error(
+      `No se pudo crear el PDF de la carta con cad_cac_id: ${cad_cac_id}`
+    );
+  }
+
+  //  Buscar informe relacionado con la carta
+  const [informes] = await db.query(`
+    SELECT
+      i.iga_id AS igaId
+    FROM clg_cac_aceptacion c
+    INNER JOIN clg_cad_detalleaceptacion d ON c.cac_id = d.cad_cac_id
+    LEFT JOIN clg_iga_informeguardalmacen i ON i.iga_cad_id = d.cad_id
+    WHERE d.cad_id = ${cad_id} AND (i.iga_estado IS NULL OR i.iga_estado = 1);
+  `);
+
+  if (!informes || informes.length === 0) {
+    throw new Error(`No se encontró informe para cad_id: ${cad_id}`);
+  }
+
+  const igaId = informes[0]?.igaId;
+  if (!igaId) {
+    throw new Error(`La variable igaId es null o indefinida`);
+  }
+
+ //actualizar informe
+  const [actualizadoInforme] = await InformeGuardaAlmancen.update(
+    { iga_doctransporte: DocTransporte_nuevo },
+    { where: { iga_id: igaId } }
+  );
+
+  if (actualizadoInforme === 0) {
+    throw new Error(`No se actualizó el informe: ${igaId}`);
+  }
+
+  // generar PDF del informe
+  const Actualizadopdf = await helpercontroller.CrearPdfInforme({
+    req,
+    res,
+    next,
+    id: igaId,
+  });
+
+  if (!Actualizadopdf) {
+    throw new Error(
+      `No se pudo crear el PDF del informe con cad_cac_id: ${cad_cac_id}`
+    );
+  }
+
+  resultado = true;
+  return resultado;
+}
+
+async function Actualizar_Peso({
+  req,
+  res,
+  next,
+  documento,
+  tipo,
+  DocTransporte_nuevo,
+  cad_id,
+}) {
+  let resultado = false;
+
+  //actualizar el detalle de la carta
+  const [actualizarCarta] = await DetalleCA.update(
+    { cad_bl: DocTransporte_nuevo },
+    { where: { cad_id } }
+  );
+
+  if (actualizarCarta === 0) {
+    throw new Error(
+      `No se encontró o no se pudo actualizar la carta con cad_id: ${cad_id}`
+    );
+  }
+
+  //obtener id de la carta
+  const registro = await DetalleCA.findOne({
+    where: { cad_id },
+    attributes: ["cad_cac_id"],
+  });
+
+  const cad_cac_id = registro?.cad_cac_id;
+  if (!cad_cac_id) {
+    throw new Error(
+      `No se encontró cad_cac_id relacionado a la carta con cad_id: ${cad_id}`
+    );
+  }
+
+  // generar PDF de la carta
+  const actualizarCartapdf = await helpercontroller.CrearPDFCA({
+    req,
+    res,
+    next,
+    id: cad_cac_id,
+  });
+
+  if (!actualizarCartapdf) {
+    throw new Error(
+      `No se pudo crear el PDF de la carta con cad_cac_id: ${cad_cac_id}`
+    );
+  }
+
+  //  Buscar informe relacionado con la carta
+  const [informes] = await db.query(`
+    SELECT
+      i.iga_id AS igaId
+    FROM clg_cac_aceptacion c
+    INNER JOIN clg_cad_detalleaceptacion d ON c.cac_id = d.cad_cac_id
+    LEFT JOIN clg_iga_informeguardalmacen i ON i.iga_cad_id = d.cad_id
+    WHERE d.cad_id = ${cad_id} AND (i.iga_estado IS NULL OR i.iga_estado = 1);
+  `);
+
+  if (!informes || informes.length === 0) {
+    throw new Error(`No se encontró informe para cad_id: ${cad_id}`);
+  }
+
+  const igaId = informes[0]?.igaId;
+  if (!igaId) {
+    throw new Error(`La variable igaId es null o indefinida`);
+  }
+
+ //actualizar informe
+  const [actualizadoInforme] = await InformeGuardaAlmancen.update(
+    { iga_doctransporte: DocTransporte_nuevo },
+    { where: { iga_id: igaId } }
+  );
+
+  if (actualizadoInforme === 0) {
+    throw new Error(`No se actualizó el informe: ${igaId}`);
+  }
+
+  // generar PDF del informe
+  const Actualizadopdf = await helpercontroller.CrearPdfInforme({
+    req,
+    res,
+    next,
+    id: igaId,
+  });
+
+  if (!Actualizadopdf) {
+    throw new Error(
+      `No se pudo crear el PDF del informe con cad_cac_id: ${cad_cac_id}`
+    );
+  }
+
+  resultado = true;
+  return resultado;
+}
+
+
 module.exports = {
   data_busquedaPorCarta,
   data_fecha_carta,
@@ -1017,4 +1301,7 @@ module.exports = {
   data_actualizar_aduana,
   data_actualizar_transportista,
   Actualizar_contenedor,
+  DataDocTransporte,
+  Actualizar_DocTransporte,
+  Actualizar_Peso
 };

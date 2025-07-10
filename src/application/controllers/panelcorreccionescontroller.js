@@ -17,27 +17,33 @@ class panelcorreccionescontroller {
     try {
       const data = await Usuarios.findAll({
         attributes: [
-          ['usu_id', 'id'],
-          [Sequelize.literal("CONCAT(usu_nombres, ' ', usu_apellidos)"), 'nombre'],
-          [Sequelize.literal("CONCAT(usu_cargo, ' - ', `log_username`)"), 'usuario']
+          ["usu_id", "id"],
+          [
+            Sequelize.literal("CONCAT(usu_nombres, ' ', usu_apellidos)"),
+            "nombre",
+          ],
+          [
+            Sequelize.literal("CONCAT(usu_cargo, ' - ', `log_username`)"),
+            "usuario",
+          ],
         ],
         where: {
-          usu_clg_correccion: 'Si'
+          usu_clg_correccion: "Si",
         },
         include: [
           {
             model: Login,
-            attributes: [] // No incluir columnas adicionales
-          }
+            attributes: [], // No incluir columnas adicionales
+          },
         ],
-        order: [['nombre', 'asc']],
-        raw: true
+        order: [["nombre", "asc"]],
+        raw: true,
       });
 
       jsonResponse = {
         status: 200,
         message: "Success",
-        response: data
+        response: data,
       };
     } catch (error) {
       next(error);
@@ -79,7 +85,7 @@ class panelcorreccionescontroller {
       jsonResponse = {
         status: 200,
         message: "Success",
-        response: data
+        response: data,
       };
     } catch (error) {
       next(error);
@@ -132,7 +138,7 @@ class panelcorreccionescontroller {
       jsonResponse = {
         status: 200,
         message: "Success",
-        response: data
+        response: data,
       };
     } catch (error) {
       next(error);
@@ -183,7 +189,8 @@ class panelcorreccionescontroller {
         solicitante,
       } = req.body;
 
-      let data, tipoLog = tipo;
+      let data,
+        tipoLog = tipo;
 
       if (tipo == "Carta") {
         tipoLog = "CA";
@@ -297,13 +304,7 @@ class panelcorreccionescontroller {
     }
 
     try {
-      const {
-        documento,
-        tipo,
-        id,
-        motivoCorreccion,
-        solicitante,
-      } = req.body;
+      const { documento, tipo, id, motivoCorreccion, solicitante } = req.body;
 
       let data,
         tipoLog = tipo;
@@ -434,7 +435,7 @@ class panelcorreccionescontroller {
       jsonResponse = {
         status: 200,
         message: "Success",
-        response: data
+        response: data,
       };
     } catch (error) {
       next(error);
@@ -475,7 +476,7 @@ class panelcorreccionescontroller {
       jsonResponse = {
         status: 200,
         message: "Success",
-        response: data
+        response: data,
       };
     } catch (error) {
       next(error);
@@ -488,7 +489,7 @@ class panelcorreccionescontroller {
 
     return res.status(jsonResponse.status).json(jsonResponse);
   }
-  
+
   //* Enviar datos para actualizar los datos de pais de destino de una Carta,
   static async ActualizarPaisDestino(req, res, next) {
     let jsonResponse = { status: 500, message: "Error", response: "" };
@@ -498,7 +499,9 @@ class panelcorreccionescontroller {
       check("documento").notEmpty().withMessage("documento es requerido."),
       check("tipo").notEmpty().withMessage("tipo es requerido."),
       check("pais_nuevo").notEmpty().withMessage("pais_nuevo es requerido."),
-      check("pais_antiguo").notEmpty().withMessage("pais_antiguo es requerido."),
+      check("pais_antiguo")
+        .notEmpty()
+        .withMessage("pais_antiguo es requerido."),
       check("cad_id").notEmpty().withMessage("cad_id es requerido."),
       check("motivoCorreccion")
         .notEmpty()
@@ -514,8 +517,15 @@ class panelcorreccionescontroller {
     }
 
     try {
-      const { documento, tipo, pais_nuevo, cad_id, motivoCorreccion, solicitante, pais_antiguo } =
-        req.body;
+      const {
+        documento,
+        tipo,
+        pais_nuevo,
+        cad_id,
+        motivoCorreccion,
+        solicitante,
+        pais_antiguo,
+      } = req.body;
 
       let data,
         tipoLog = tipo;
@@ -532,7 +542,7 @@ class panelcorreccionescontroller {
         motivoCorreccion,
         solicitante,
         dato_nuevo: pais_nuevo,
-        dato_antiguo: pais_antiguo
+        dato_antiguo: pais_antiguo,
       };
 
       data = await panelcorrecciones.data_actualizar_destino({
@@ -555,7 +565,7 @@ class panelcorreccionescontroller {
       jsonResponse = {
         status: 200,
         message: "Success",
-         response: "Se actualizo el dato correctamente",
+        response: "Se actualizo el dato correctamente",
       };
     } catch (error) {
       next(error);
@@ -578,7 +588,9 @@ class panelcorreccionescontroller {
       check("documento").notEmpty().withMessage("documento es requerido."),
       check("tipo").notEmpty().withMessage("tipo es requerido."),
       check("pais_nuevo").notEmpty().withMessage("pais_nuevo es requerido."),
-      check("pais_antiguo").notEmpty().withMessage("pais_antiguo es requerido."),
+      check("pais_antiguo")
+        .notEmpty()
+        .withMessage("pais_antiguo es requerido."),
       check("cac_id").notEmpty().withMessage("cad_id es requerido."),
       check("motivoCorreccion")
         .notEmpty()
@@ -594,8 +606,15 @@ class panelcorreccionescontroller {
     }
 
     try {
-      const { documento, tipo, pais_nuevo, cac_id, motivoCorreccion, solicitante, pais_antiguo } =
-        req.body;
+      const {
+        documento,
+        tipo,
+        pais_nuevo,
+        cac_id,
+        motivoCorreccion,
+        solicitante,
+        pais_antiguo,
+      } = req.body;
 
       let data,
         tipoLog = tipo;
@@ -612,7 +631,7 @@ class panelcorreccionescontroller {
         motivoCorreccion,
         solicitante,
         dato_nuevo: pais_nuevo,
-        dato_antiguo: pais_antiguo
+        dato_antiguo: pais_antiguo,
       };
 
       data = await panelcorrecciones.data_actualizar_origen({
@@ -635,8 +654,7 @@ class panelcorreccionescontroller {
       jsonResponse = {
         status: 200,
         message: "Success",
-         response: "Se actualizo el dato correctamente",
-         
+        response: "Se actualizo el dato correctamente",
       };
     } catch (error) {
       next(error);
@@ -649,7 +667,7 @@ class panelcorreccionescontroller {
 
     return res.status(jsonResponse.status).json(jsonResponse);
   }
-  
+
   //* Enviar datos para cambiar cliente en carta e informe
   static async CambioCliente(req, res, next) {
     let jsonResponse = { status: 500, message: "Error", response: "" };
@@ -658,8 +676,12 @@ class panelcorreccionescontroller {
     const validaciones = [
       check("documento").notEmpty().withMessage("documento es requerido."),
       check("tipo").notEmpty().withMessage("tipo es requerido."),
-      check("cliente_nuevo").notEmpty().withMessage("cliente_nuevo es requerido."),
-      check("cliente_antiguo").notEmpty().withMessage("cliente_antiguo es requerido."),
+      check("cliente_nuevo")
+        .notEmpty()
+        .withMessage("cliente_nuevo es requerido."),
+      check("cliente_antiguo")
+        .notEmpty()
+        .withMessage("cliente_antiguo es requerido."),
       check("cad_id").notEmpty().withMessage("cad_id es requerido."),
       check("motivoCorreccion")
         .notEmpty()
@@ -675,8 +697,15 @@ class panelcorreccionescontroller {
     }
 
     try {
-      const { documento, tipo, cliente_nuevo, cliente_antiguo, cad_id, motivoCorreccion, solicitante } =
-        req.body;
+      const {
+        documento,
+        tipo,
+        cliente_nuevo,
+        cliente_antiguo,
+        cad_id,
+        motivoCorreccion,
+        solicitante,
+      } = req.body;
 
       let data,
         tipoLog = tipo;
@@ -693,7 +722,7 @@ class panelcorreccionescontroller {
         motivoCorreccion,
         solicitante,
         dato_nuevo: cliente_nuevo,
-        dato_antiguo: cliente_antiguo
+        dato_antiguo: cliente_antiguo,
       };
 
       data = await panelcorrecciones.data_actualizar_cliente({
@@ -716,7 +745,6 @@ class panelcorreccionescontroller {
         status: 200,
         message: "Success",
         response: "Se actualizo el dato correctamente",
-
       };
     } catch (error) {
       next(error);
@@ -738,8 +766,12 @@ class panelcorreccionescontroller {
     const validaciones = [
       check("documento").notEmpty().withMessage("documento es requerido."),
       check("tipo").notEmpty().withMessage("tipo es requerido."),
-      check("aduana_nuevo").notEmpty().withMessage("aduana_nuevo es requerido."),
-      check("aduana_antiguo").notEmpty().withMessage("aduana_antiguo es requerido."),
+      check("aduana_nuevo")
+        .notEmpty()
+        .withMessage("aduana_nuevo es requerido."),
+      check("aduana_antiguo")
+        .notEmpty()
+        .withMessage("aduana_antiguo es requerido."),
       check("id_carta").notEmpty().withMessage("id_carta es requerido."),
       check("motivoCorreccion")
         .notEmpty()
@@ -755,8 +787,15 @@ class panelcorreccionescontroller {
     }
 
     try {
-      const { documento, tipo, aduana_nuevo, aduana_antiguo, id_carta, motivoCorreccion, solicitante } =
-        req.body;
+      const {
+        documento,
+        tipo,
+        aduana_nuevo,
+        aduana_antiguo,
+        id_carta,
+        motivoCorreccion,
+        solicitante,
+      } = req.body;
 
       let data,
         tipoLog = tipo;
@@ -773,7 +812,7 @@ class panelcorreccionescontroller {
         motivoCorreccion,
         solicitante,
         dato_nuevo: aduana_nuevo,
-        dato_antiguo: aduana_antiguo
+        dato_antiguo: aduana_antiguo,
       };
 
       data = await panelcorrecciones.data_actualizar_aduana({
@@ -796,7 +835,6 @@ class panelcorreccionescontroller {
         status: 200,
         message: "Success",
         response: "Se actualizo el dato correctamente",
-
       };
     } catch (error) {
       next(error);
@@ -810,7 +848,7 @@ class panelcorreccionescontroller {
     return res.status(jsonResponse.status).json(jsonResponse);
   }
 
-   //* Enviar datos para cambiar transportist a carta e informe
+  //* Enviar datos para cambiar transportist a carta e informe
   static async CambioTransportista(req, res, next) {
     let jsonResponse = { status: 500, message: "Error", response: "" };
 
@@ -818,8 +856,12 @@ class panelcorreccionescontroller {
     const validaciones = [
       check("documento").notEmpty().withMessage("documento es requerido."),
       check("tipo").notEmpty().withMessage("tipo es requerido."),
-      check("transportista_nuevo").notEmpty().withMessage("transportista_nuevo es requerido."),
-      check("transportista_antiguo").notEmpty().withMessage("transportista_antiguo es requerido."),
+      check("transportista_nuevo")
+        .notEmpty()
+        .withMessage("transportista_nuevo es requerido."),
+      check("transportista_antiguo")
+        .notEmpty()
+        .withMessage("transportista_antiguo es requerido."),
       check("id_carta").notEmpty().withMessage("id_carta es requerido."),
       check("motivoCorreccion")
         .notEmpty()
@@ -835,8 +877,15 @@ class panelcorreccionescontroller {
     }
 
     try {
-      const { documento, tipo, transportista_nuevo, transportista_antiguo, id_carta, motivoCorreccion, solicitante } =
-        req.body;
+      const {
+        documento,
+        tipo,
+        transportista_nuevo,
+        transportista_antiguo,
+        id_carta,
+        motivoCorreccion,
+        solicitante,
+      } = req.body;
 
       let data,
         tipoLog = tipo;
@@ -853,7 +902,7 @@ class panelcorreccionescontroller {
         motivoCorreccion,
         solicitante,
         dato_nuevo: transportista_nuevo,
-        dato_antiguo: transportista_antiguo
+        dato_antiguo: transportista_antiguo,
       };
 
       data = await panelcorrecciones.data_actualizar_transportista({
@@ -876,8 +925,7 @@ class panelcorreccionescontroller {
         status: 200,
         message: "Success",
         //response: "Se actualizo el dato correctamente",
-        response: data
-
+        response: data,
       };
     } catch (error) {
       next(error);
@@ -890,7 +938,7 @@ class panelcorreccionescontroller {
 
     return res.status(jsonResponse.status).json(jsonResponse);
   }
-    //* Enviar datos para cambiar contenedor a carta e informe
+  //* Enviar datos para cambiar contenedor a carta e informe
   static async CambioContenedor(req, res, next) {
     let jsonResponse = { status: 500, message: "Error", response: "" };
 
@@ -898,8 +946,12 @@ class panelcorreccionescontroller {
     const validaciones = [
       check("documento").notEmpty().withMessage("documento es requerido."),
       check("tipo").notEmpty().withMessage("tipo es requerido."),
-      check("contenedor_nuevo").notEmpty().withMessage("contenedor_nuevo es requerido."),
-      check("contenedor_antiguo").notEmpty().withMessage("transportista_antiguo es requerido."),
+      check("contenedor_nuevo")
+        .notEmpty()
+        .withMessage("contenedor_nuevo es requerido."),
+      check("contenedor_antiguo")
+        .notEmpty()
+        .withMessage("transportista_antiguo es requerido."),
       check("id_carta").notEmpty().withMessage("id_carta es requerido."),
       check("motivoCorreccion")
         .notEmpty()
@@ -915,8 +967,15 @@ class panelcorreccionescontroller {
     }
 
     try {
-      const { documento, tipo, contenedor_nuevo, contenedor_antiguo, id_carta, motivoCorreccion, solicitante } =
-        req.body;
+      const {
+        documento,
+        tipo,
+        contenedor_nuevo,
+        contenedor_antiguo,
+        id_carta,
+        motivoCorreccion,
+        solicitante,
+      } = req.body;
 
       let data,
         tipoLog = tipo;
@@ -933,7 +992,7 @@ class panelcorreccionescontroller {
         motivoCorreccion,
         solicitante,
         dato_nuevo: contenedor_nuevo,
-        dato_antiguo: contenedor_antiguo
+        dato_antiguo: contenedor_antiguo,
       };
 
       data = await panelcorrecciones.Actualizar_contenedor({
@@ -956,7 +1015,222 @@ class panelcorreccionescontroller {
         status: 200,
         message: "Success",
         response: "Se actualizo el dato correctamente",
+      };
+    } catch (error) {
+      next(error);
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
 
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
+  static async informacionDocTransporte(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("documento").notEmpty().withMessage("documento es requerido."),
+      check("tipo").notEmpty().withMessage("tipo es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      const { documento, tipo } = req.body;
+
+      const data = await panelcorrecciones.DataDocTransporte({
+        documento,
+        tipo,
+      });
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: data,
+      };
+    } catch (error) {
+      next(error);
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
+  static async CambioDocumentoTransporte(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("documento").notEmpty().withMessage("documento es requerido."),
+      check("tipo").notEmpty().withMessage("tipo es requerido."),
+      check("DocTransporte_nuevo")
+        .notEmpty()
+        .withMessage("DocTransporte_nuevo es requerido."),
+      check("DocTransporte_antiguo")
+        .notEmpty()
+        .withMessage("DocTransporte_antiguo es requerido."),
+      check("cad_id").notEmpty().withMessage("cad_id es requerido."),
+      check("motivoCorreccion")
+        .notEmpty()
+        .withMessage("motivoCorreccion es requerido."),
+      check("solicitante").notEmpty().withMessage("solicitante es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      const {
+        documento,
+        tipo,
+        DocTransporte_nuevo,
+        DocTransporte_antiguo,
+        cad_id,
+        motivoCorreccion,
+        solicitante,
+      } = req.body;
+
+      let data,
+        tipoLog = tipo;
+      let registroGuardado = false;
+      if (tipo == "Carta") {
+        tipoLog = "CA";
+      } else if (tipo == "Informe") {
+        tipoLog = "IGA";
+      }
+
+      let log = {
+        tipo: tipoLog,
+        documento,
+        motivoCorreccion,
+        solicitante,
+        dato_nuevo: DocTransporte_nuevo,
+        dato_antiguo: DocTransporte_antiguo,
+      };
+
+      data = await panelcorrecciones.Actualizar_DocTransporte({
+        req,
+        res,
+        next,
+        documento,
+        tipo,
+        DocTransporte_nuevo,
+        cad_id,
+      });
+      if (data) {
+        registroGuardado = await helpercontroller.GuardarCorrecciones({
+          req,
+          log,
+        });
+      }
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: "Se actualizo el dato correctamente",
+      };
+    } catch (error) {
+      next(error);
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
+  static async CambioPeso(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("documento").notEmpty().withMessage("documento es requerido."),
+      check("tipo").notEmpty().withMessage("tipo es requerido."),
+      check("Peso_nuevo")
+        .notEmpty()
+        .withMessage("Peso_nuevo es requerido."),
+      check("Peso_antiguo")
+        .notEmpty()
+        .withMessage("Peso_antiguo es requerido."),
+      check("cad_id").notEmpty().withMessage("cad_id es requerido."),
+      check("motivoCorreccion")
+        .notEmpty()
+        .withMessage("motivoCorreccion es requerido."),
+      check("solicitante").notEmpty().withMessage("solicitante es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      const {
+        documento,
+        tipo,
+        Peso_nuevo,
+        Peso_antiguo,
+        cad_id,
+        motivoCorreccion,
+        solicitante,
+      } = req.body;
+
+      let data,
+        tipoLog = tipo;
+      let registroGuardado = false;
+      if (tipo == "Carta") {
+        tipoLog = "CA";
+      } else if (tipo == "Informe") {
+        tipoLog = "IGA";
+      }
+
+      let log = {
+        tipo: tipoLog,
+        documento,
+        motivoCorreccion,
+        solicitante,
+        dato_nuevo: Peso_nuevo,
+        dato_antiguo: Peso_antiguo,
+      };
+
+      data = await panelcorrecciones.Actualizar_Peso({
+        req,
+        res,
+        next,
+        documento,
+        tipo,
+        DocTransporte_nuevo,
+        cad_id,
+      });
+      if (data) {
+        registroGuardado = await helpercontroller.GuardarCorrecciones({
+          req,
+          log,
+        });
+      }
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: "Se actualizo el dato correctamente",
       };
     } catch (error) {
       next(error);
