@@ -1045,8 +1045,8 @@ class panelcorreccionescontroller {
 
     try {
       const { documento, tipo } = req.body;
-      let data, total;
-      ({ data, total } = await panelcorrecciones.DataDocTransporte({
+      let data, total, volumen;
+      ({ data, total ,volumen} = await panelcorrecciones.DataDocTransporte({
         documento,
         tipo,
       }));
@@ -1056,6 +1056,7 @@ class panelcorreccionescontroller {
         message: "Success",
         response: data,
         peso_total: total,
+        volumen_total: volumen,
       };
     } catch (error) {
       next(error);
@@ -1237,6 +1238,93 @@ class panelcorreccionescontroller {
         message: "error",
         response: "No se  actualizo el dato correctamente",
       };
+    } catch (error) {
+      next(error);
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
+  static async CambioVolumen(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("documento").notEmpty().withMessage("documento es requerido."),
+      check("tipo").notEmpty().withMessage("tipo es requerido."),
+      check("Volumen_nuevo").notEmpty().withMessage("Volumen_nuevo es requerido."),
+      check("volumen_antiguo")
+        .notEmpty()
+        .withMessage("volumen_antiguo es requerido."),
+      check("cad_id").notEmpty().withMessage("cad_id es requerido."),
+      check("motivoCorreccion")
+        .notEmpty()
+        .withMessage("motivoCorreccion es requerido."),
+      check("solicitante").notEmpty().withMessage("solicitante es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      const {
+        documento,
+        tipo,
+        Volumen_nuevo,
+        volumen_antiguo,
+        cad_id,
+        motivoCorreccion,
+        solicitante,
+      } = req.body;
+
+      let data,
+        tipoLog = tipo;
+      let registroGuardado = false;
+      if (tipo == "Carta") {
+        tipoLog = "CA";
+      } else if (tipo == "Informe") {
+        tipoLog = "IGA";
+      }
+
+      let log = {
+        tipo: tipoLog,
+        documento,
+        motivoCorreccion,
+        solicitante,
+        dato_nuevo: Volumen_nuevo,
+        dato_antiguo: volumen_antiguo,
+      };
+
+      data = await panelcorrecciones.Actualizar_Volumen({
+        req,
+        res,
+        next,
+        documento,
+        tipo,
+        Volumen_nuevo,
+        cad_id,
+      });
+      if (data) {
+        registroGuardado = await helpercontroller.GuardarCorrecciones({
+          req,
+          log,
+        });
+      }
+   
+        jsonResponse = {
+          status: 200,
+          message: "Success",
+          response: "Se actualizo el dato correctamente",
+        };
+      
     } catch (error) {
       next(error);
       jsonResponse = {

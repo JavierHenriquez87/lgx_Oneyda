@@ -6,6 +6,7 @@ const InformeGuardaAlmancen = require("../models/InformeGuardaAlmacenModel");
 const Salidas = require("../models/SalidasModel");
 const DetalleGuardaAlmancen = require("../models/DetalleInformeGuardaAlmacenModel");
 const { Op } = require("sequelize");
+const InformeGuardaAlmacen = require("../models/InformeGuardaAlmacenModel");
 
 async function data_busquedaPorCarta({ documento, tipo }) {
   let where = `
@@ -1100,8 +1101,11 @@ async function DataDocTransporte({ documento, tipo }) {
   }
 
   let totalCad = sumatoriaCad[0]?.peso;
+  let totalCad2 = sumatoriaCad[0]?.volumen;
+  let v = parseFloat(totalCad2)
+  let total_vol = v.toFixed(3)
 
-  return { data: datos, total: totalCad };
+  return { data: datos, total: totalCad , volumen:total_vol};
 }
 
 async function Actualizar_DocTransporte({
@@ -1335,6 +1339,151 @@ async function Actualizar_Peso({
   return resultado;
 }
 
+async function Actualizar_Volumen({
+  req,
+  res,
+  next,
+  documento,
+  tipo,
+  Volumen_nuevo,
+  cad_id,
+}) {
+  let resultado = false;
+
+  //actualizar el detalle de la carta
+  const [actualizarDCarta] = await DetalleCA.update(
+    { cad_cbm: Volumen_nuevo },
+    { where: { cad_id } }
+  );
+
+  if (actualizarDCarta === 0) {
+    throw new Error(
+      `No se encontró o no se pudo actualizar la carta con cad_id: ${cad_id}`
+    );
+  }
+
+  //obtenemos el peso total de nuevo para actualizar la carta con la sumatoria o resta del peso que se haya cambiado
+  const [sumatoriaCad] = await db.query(`
+    SELECT 
+      SUM(cad_cantbultos) AS bultos,
+      SUM(cad_peso) AS peso,
+      SUM(cad_cbm) AS volumen,
+      cad_cac_id AS carta
+    FROM clg_cad_detalleaceptacion
+    WHERE cad_cac_id = (
+      SELECT cad_cac_id
+      FROM clg_cad_detalleaceptacion
+      WHERE cad_id = ${cad_id}
+    )
+    GROUP BY cad_cac_id;
+  `);
+
+  if (!sumatoriaCad || sumatoriaCad.length === 0) {
+    throw new Error(`No se encontro sumatoria para  cac_id: ${cad_id}`);
+  }
+
+  let totalCad = sumatoriaCad[0]?.volumen;
+  let cac_id = sumatoriaCad[0]?.carta;
+  // se mandan los datos obtenidos de la sumatoria, para tener el nuevo peso en la carta
+  const [actualizarCarta] = await CAceptacion.update(
+    { cac_totalcbm: totalCad },
+    { where: { cac_id } }
+  );
+
+  if (actualizarCarta === 0) {
+    throw new Error(
+      `No se encontró o no se pudo actualizar la carta con cad_id: ${cad_id}`
+    );
+  }
+
+  //obtener id de la carta
+  const registro = await DetalleCA.findOne({
+    where: { cad_id },
+    attributes: ["cad_cac_id"],
+  });
+
+  const cad_cac_id = registro?.cad_cac_id;
+  if (!cad_cac_id) {
+    throw new Error(
+      `No se encontró cad_cac_id relacionado a la carta con cad_id: ${cad_id}`
+    );
+  }
+
+  // generar PDF de la carta
+  const actualizarCartapdf = await helpercontroller.CrearPDFCA({
+    req,
+    res,
+    next,
+    id: cad_cac_id,
+  });
+
+  if (actualizarCartapdf == false) {
+    throw new Error(
+      `No se pudo crear el PDF de la carta con cad_cac_id: ${cad_cac_id}`
+    );
+  }
+
+  //  Buscar informe relacionado con la carta
+  const [informes] = await db.query(`
+    SELECT
+      i.iga_id AS igaId
+    FROM clg_cac_aceptacion c
+    INNER JOIN clg_cad_detalleaceptacion d ON c.cac_id = d.cad_cac_id
+    LEFT JOIN clg_iga_informeguardalmacen i ON i.iga_cad_id = d.cad_id
+    WHERE d.cad_id = ${cad_id} AND (i.iga_estado IS NULL OR i.iga_estado = 1);
+  `);
+
+  if (!informes || informes.length === 0) {
+    throw new Error(`No se encontró informe para cad_id: ${cad_id}`);
+  }
+
+  const igaId = informes[0]?.igaId;
+  if (!igaId) {
+    throw new Error(`La variable igaId es null o indefinida`);
+  }
+
+  //actualizar el peso en detalle informe guardaalmacen
+
+  const [actualizarInforme] = await InformeGuardaAlmacen.update(
+    { iga_volumen: Volumen_nuevo },
+    { where: { iga_id: igaId } }
+  );
+
+  if (actualizarInforme === 0) {
+    throw new Error(
+      `No se encontró o no se pudo actualizar el  informe con igaId: ${cad_id}`
+    );
+  }
+
+  const [actualizarDInforme] = await DetalleGuardaAlmancen.update(
+    { dga_volumen: Volumen_nuevo },
+    { where: { dga_iga_id: igaId } }
+  );
+
+  if (actualizarDInforme === 0) {
+    throw new Error(
+      `No se encontró o no se pudo actualizar el detalle informe con igaId: ${cad_id}`
+    );
+  }
+
+  // generar PDF del informe
+  const Actualizadopdf = await helpercontroller.CrearPdfInforme({
+    req,
+    res,
+    next,
+    id: igaId,
+  });
+
+  if (Actualizadopdf == false) {
+    throw new Error(
+      `No se pudo crear el PDF del informe con cad_cac_id: ${cad_cac_id}`
+    );
+  }
+
+  resultado = true;
+  return resultado;
+}
+
 module.exports = {
   data_busquedaPorCarta,
   data_fecha_carta,
@@ -1352,4 +1501,5 @@ module.exports = {
   DataDocTransporte,
   Actualizar_DocTransporte,
   Actualizar_Peso,
+  Actualizar_Volumen
 };

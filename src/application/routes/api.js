@@ -309,13 +309,13 @@ router.post('/panelcorrecciones/ActualizarPaisDestino', verifyToken, panelcorrec
 router.post('/panelcorrecciones/CambioCliente', verifyToken,panelcorreccionescontroller.CambioCliente);
 
 //*para obtener los datos del transportista seria esta misma == > panelcorrecciones/ConsultarDocumento
-router.post('/panelcorrecciones/CambioTransportista',  panelcorreccionescontroller.CambioTransportista);
+router.post('/panelcorrecciones/CambioTransportista',  verifyToken,panelcorreccionescontroller.CambioTransportista);
 
 //*para obtener los datos de la aduana seria esta misma == > panelcorrecciones/ConsultarDocumento
-router.post('/panelcorrecciones/CambioAduana', panelcorreccionescontroller.CambioAduana);
+router.post('/panelcorrecciones/CambioAduana',verifyToken, panelcorreccionescontroller.CambioAduana);
 
 //*para obtener los datos del contenedor seria esta misma == > panelcorrecciones/ConsultarDocumento
-router.post('/panelcorrecciones/CambioContenedor', panelcorreccionescontroller.CambioContenedor);
+router.post('/panelcorrecciones/CambioContenedor', verifyToken,panelcorreccionescontroller.CambioContenedor);
 
 
 router.post('/panelcorrecciones/informacionDocTransporte',verifyToken,panelcorreccionescontroller.informacionDocTransporte);
@@ -349,7 +349,18 @@ router.post('/panelcorrecciones/CambioPeso',verifyToken,panelcorreccionescontrol
 
 // }
 
+//*para obtener los datos del volumen seria esta misma == > panelcorrecciones/informacionDocTransporte
+router.post('/panelcorrecciones/Actualizar_Volumen',verifyToken, panelcorreccionescontroller.CambioVolumen);
+// {
+//     "documento" : "152-2022",
+//     "tipo" : "Carta",
+//     "cad_id" : 34370,
+//     "Volumen_nuevo" : "21.1002",
+//     "volumen_antiguo" : "11.1002",
+//     "motivoCorreccion" : "Cambio de volumen",
+//     "solicitante" : 309
 
+// }
 //===========================================================================
 // TODO: INVENTARIO
 //===========================================================================
