@@ -295,10 +295,10 @@ router.post('/reportesinternos/reporteFacturacionRegiClieCons', verifyToken, rep
 // TODO: PANEL DE CORRECCIONES
 //===========================================================================
 router.post('/panelcorrecciones/obtenerUsersCorrecciones', verifyToken, panelcorreccionescontroller.ObtenerUsuariosCorrecciones);
-router.post('/panelcorrecciones/ConsultarDocumento', panelcorreccionescontroller.ConsultarDocumento);
+router.post('/panelcorrecciones/ConsultarDocumento', verifyToken,panelcorreccionescontroller.ConsultarDocumento);
 //! Cambio de Fecha
 router.post('/panelcorrecciones/ObtenerDatosDocumento', verifyToken, panelcorreccionescontroller.ObtenerDatosDocumento);
-router.post('/panelcorrecciones/CambiarFechaDocumento', verifyToken, panelcorreccionescontroller.CambiarFechaDocumento);
+router.post('/panelcorrecciones/CambiarFechaDocumento', panelcorreccionescontroller.CambiarFechaDocumento);
 //! Actualizar PDF
 router.post('/panelcorrecciones/ActualizarPDF', verifyToken, panelcorreccionescontroller.ActualizarPDF);
 //! Actualizar pais de Destino
@@ -312,10 +312,10 @@ router.post('/panelcorrecciones/CambioCliente', verifyToken,panelcorreccionescon
 router.post('/panelcorrecciones/CambioTransportista',  panelcorreccionescontroller.CambioTransportista);
 
 //*para obtener los datos de la aduana seria esta misma == > panelcorrecciones/ConsultarDocumento
-router.post('/panelcorrecciones/CambioAduana', verifyToken, panelcorreccionescontroller.CambioAduana);
+router.post('/panelcorrecciones/CambioAduana', panelcorreccionescontroller.CambioAduana);
 
 //*para obtener los datos del contenedor seria esta misma == > panelcorrecciones/ConsultarDocumento
-router.post('/panelcorrecciones/CambioContenedor', verifyToken, panelcorreccionescontroller.CambioContenedor);
+router.post('/panelcorrecciones/CambioContenedor', panelcorreccionescontroller.CambioContenedor);
 
 
 router.post('/panelcorrecciones/informacionDocTransporte',verifyToken,panelcorreccionescontroller.informacionDocTransporte);

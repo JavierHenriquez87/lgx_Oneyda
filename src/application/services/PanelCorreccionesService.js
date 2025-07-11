@@ -749,11 +749,9 @@ async function data_actualizar_aduana({
   aduana_nuevo,
   id_carta,
 }) {
-  let resultado = false;
   let cac_id = id_carta;
 
   try {
-    // Actualizar la carta
     const [actualizarCarta] = await CAceptacion.update(
       { cac_adu_id: aduana_nuevo },
       { where: { cac_id } }
@@ -763,7 +761,6 @@ async function data_actualizar_aduana({
       throw new Error(`No se actualizó la carta con cac_id: ${cac_id}`);
     }
 
-    // Crear PDF de la carta
     const actualizarPDF = await helpercontroller.CrearPDFCA({
       req,
       res,
@@ -771,13 +768,12 @@ async function data_actualizar_aduana({
       id: cac_id,
     });
 
-    if (actualizarPDF === false) {
+    if (!actualizarPDF) {
       throw new Error(
         `No se actualizó el PDF de la carta con cac_id: ${cac_id}`
       );
     }
 
-    // Obtener informes relacionados
     const informes = await InformeGuardaAlmancen.findAll({
       where: { iga_cac_id: cac_id },
       attributes: ["iga_codigo", "iga_id"],
@@ -789,7 +785,6 @@ async function data_actualizar_aduana({
       );
     }
 
-    // Generar PDF por cada informe
     let actualizaciones = 0;
     for (const informe of informes) {
       const actualizado = await helpercontroller.CrearPdfInforme({
@@ -798,7 +793,6 @@ async function data_actualizar_aduana({
         next,
         id: informe.iga_id,
       });
-
       if (actualizado === true) {
         actualizaciones++;
       }
@@ -808,13 +802,10 @@ async function data_actualizar_aduana({
       throw new Error(`No se actualizó ningún informe para cac_id: ${cac_id}`);
     }
 
-    resultado = true;
+    return true;
   } catch (error) {
-    next(error);
-    resultado = false;
+    throw error;
   }
-
-  return resultado;
 }
 
 async function data_actualizar_transportista({
@@ -993,13 +984,10 @@ async function Actualizar_contenedor({
       throw new Error(`No se actualizó ningún informe para cac_id: ${cac_id}`);
     }
 
-    resultado = true;
+    return true;
   } catch (error) {
-    next(error);
-    resultado = false;
+    throw error;
   }
-
-  return resultado;
 }
 
 async function DataDocTransporte({ documento, tipo }) {
@@ -1089,7 +1077,7 @@ async function DataDocTransporte({ documento, tipo }) {
       de_lgx: row.de_lgx,
     });
   });
-  
+
   let cad_id = datos[0].cad_id;
 
   const [sumatoriaCad] = await db.query(`
@@ -1106,17 +1094,14 @@ async function DataDocTransporte({ documento, tipo }) {
     )
     GROUP BY cad_cac_id;
   `);
-  
 
   if (!sumatoriaCad || sumatoriaCad.length === 0) {
-    throw new Error(
-      `No se encontro sumatoria para  cac_id: ${cad_id}`
-    );
+    throw new Error(`No se encontro sumatoria para  cac_id: ${cad_id}`);
   }
 
   let totalCad = sumatoriaCad[0]?.peso;
 
-  return {data:datos,total:totalCad};
+  return { data: datos, total: totalCad };
 }
 
 async function Actualizar_DocTransporte({
@@ -1238,7 +1223,7 @@ async function Actualizar_Peso({
       `No se encontró o no se pudo actualizar la carta con cad_id: ${cad_id}`
     );
   }
-  
+
   //obtenemos el peso total de nuevo para actualizar la carta con la sumatoria o resta del peso que se haya cambiado
   const [sumatoriaCad] = await db.query(`
     SELECT 
@@ -1254,16 +1239,13 @@ async function Actualizar_Peso({
     )
     GROUP BY cad_cac_id;
   `);
-  
 
   if (!sumatoriaCad || sumatoriaCad.length === 0) {
-    throw new Error(
-      `No se encontro sumatoria para  cac_id: ${cad_id}`
-    );
+    throw new Error(`No se encontro sumatoria para  cac_id: ${cad_id}`);
   }
 
   let totalCad = sumatoriaCad[0]?.peso;
-  let cac_id =  sumatoriaCad[0]?.carta;
+  let cac_id = sumatoriaCad[0]?.carta;
   // se mandan los datos obtenidos de la sumatoria, para tener el nuevo peso en la carta
   const [actualizarCarta] = await CAceptacion.update(
     { cac_totalpeso: totalCad },
@@ -1324,11 +1306,11 @@ async function Actualizar_Peso({
 
   //actualizar el peso en detalle informe guardaalmacen
 
-   const [actualizarDInforme] = await DetalleGuardaAlmancen.update(
+  const [actualizarDInforme] = await DetalleGuardaAlmancen.update(
     { dga_peso: Peso_nuevo },
     { where: { dga_iga_id: igaId } }
   );
-  
+
   if (actualizarDInforme === 0) {
     throw new Error(
       `No se encontró o no se pudo actualizar el detalle informe con igaId: ${cad_id}`
@@ -1342,7 +1324,6 @@ async function Actualizar_Peso({
     next,
     id: igaId,
   });
-
 
   if (Actualizadopdf == false) {
     throw new Error(

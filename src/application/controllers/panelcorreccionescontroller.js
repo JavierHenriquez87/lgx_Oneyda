@@ -834,7 +834,7 @@ class panelcorreccionescontroller {
       jsonResponse = {
         status: 200,
         message: "Success",
-        response: "Se actualizo el dato correctamente",
+        response: "Se actualizó el dato correctamente",
       };
     } catch (error) {
       next(error);
@@ -924,8 +924,8 @@ class panelcorreccionescontroller {
       jsonResponse = {
         status: 200,
         message: "Success",
-        //response: "Se actualizo el dato correctamente",
-        response: data,
+        response: "Se actualizo el dato correctamente",
+        // response: data,
       };
     } catch (error) {
       next(error);
@@ -1047,15 +1047,15 @@ class panelcorreccionescontroller {
       const { documento, tipo } = req.body;
       let data, total;
       ({ data, total } = await panelcorrecciones.DataDocTransporte({
-              documento,
-              tipo,
-            }));
+        documento,
+        tipo,
+      }));
 
       jsonResponse = {
         status: 200,
         message: "Success",
         response: data,
-        peso_total:total
+        peso_total: total,
       };
     } catch (error) {
       next(error);
@@ -1163,9 +1163,7 @@ class panelcorreccionescontroller {
     const validaciones = [
       check("documento").notEmpty().withMessage("documento es requerido."),
       check("tipo").notEmpty().withMessage("tipo es requerido."),
-      check("Peso_nuevo")
-        .notEmpty()
-        .withMessage("Peso_nuevo es requerido."),
+      check("Peso_nuevo").notEmpty().withMessage("Peso_nuevo es requerido."),
       check("Peso_antiguo")
         .notEmpty()
         .withMessage("Peso_antiguo es requerido."),
@@ -1227,23 +1225,18 @@ class panelcorreccionescontroller {
           log,
         });
       }
-      if(data == true){
+      if (data == true) {
         jsonResponse = {
-        status: 200,
-        message: "Success",
-        response: "Se actualizo el dato correctamente",
-     
-      };
+          status: 200,
+          message: "Success",
+          response: "Se actualizo el dato correctamente",
+        };
       }
-        jsonResponse = {
+      jsonResponse = {
         status: 500,
         message: "error",
         response: "No se  actualizo el dato correctamente",
-      
       };
-      
-
-      
     } catch (error) {
       next(error);
       jsonResponse = {
