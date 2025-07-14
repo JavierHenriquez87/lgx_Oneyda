@@ -361,6 +361,47 @@ router.post('/panelcorrecciones/Actualizar_Volumen',verifyToken, panelcorreccion
 //     "solicitante" : 309
 
 // }
+
+//*para obtener los bultos seria esta misma == > panelcorrecciones/informacionDocTransporte
+router.post('/panelcorrecciones/Actualizar_Bultos',verifyToken, panelcorreccionescontroller.Cambio_Bultos);
+// {
+//     "documento" : "152-2022",
+//     "tipo" : "Carta",
+//     "cad_id" : 34370,
+//     "Bulto_nuevo" : "13",
+//     "Bulto_antiguo" : "13",
+//     "motivoCorreccion" : "Cambio de volumen",
+//     "solicitante" : 309
+
+// }
+
+router.post('/panelcorrecciones/Informacion_Clientes',verifyToken, panelcorreccionescontroller.Informacion_Clientes);
+// {
+//     "documento": "152-2022"
+// }
+router.post('/panelcorrecciones/Agregar_Cliente',verifyToken, panelcorreccionescontroller.Agregar_Cliente);
+// {
+//     "documento_bl" : "ELS-10253",
+//     "tarifa" : "No",
+//     "bultos" : 5,
+//     "peso" : "5",
+//     "id_carta" : 7203,
+//     "cbm" : "5",
+//     "id_cliente" : 80,
+//     "id_pais" :26,
+//     "motivoCorreccion" : "Agregar cliente nuevo a carta 152-2022",
+//     "solicitante" : 309
+// }
+
+router.post('/panelcorrecciones/Eliminar_cliente',verifyToken, panelcorreccionescontroller.Eliminar_cliente);
+// {
+//     "cad_id" : 63923,
+//     "id_carta" : 7203,
+//     "cac_guardalmacen": 1,
+//     "id_cliente" : 80,
+//     "motivoCorreccion" : "Agregar cliente nuevo a carta 152-2022",
+//     "solicitante" : 309
+// }
 //===========================================================================
 // TODO: INVENTARIO
 //===========================================================================

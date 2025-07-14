@@ -1,13 +1,18 @@
 const { check } = require("express-validator");
 const { realizarValidaciones } = require("../validaciones/validaciones"); //Validaciones de los datos que envía el usuario
-const { Sequelize } = require("sequelize");
+const { Sequelize, where } = require("sequelize");
 const Login = require("../models/LoginModel");
 const { el } = require("date-fns/locale");
-
+const db = require("../../database/db");
+//Controladores a
 const helpercontroller = require("./helpercontroller");
 const panelcorrecciones = require("../services/PanelCorreccionesService");
+
+// Modelos a utilizar
 const Usuarios = require("../models/UsuarioModel");
 const InformeGuardaAlmancen = require("../models/InformeGuardaAlmacenModel");
+const DetalleCA = require("../models/DetalleCartaAceptacionModel");
+const CAceptacion = require("../models/CartaAceptacionModel");
 
 class panelcorreccionescontroller {
   //* Obtener listado de usuario para el select de solicitantes de correcciones
@@ -938,6 +943,7 @@ class panelcorreccionescontroller {
 
     return res.status(jsonResponse.status).json(jsonResponse);
   }
+
   //* Enviar datos para cambiar contenedor a carta e informe
   static async CambioContenedor(req, res, next) {
     let jsonResponse = { status: 500, message: "Error", response: "" };
@@ -1027,6 +1033,8 @@ class panelcorreccionescontroller {
 
     return res.status(jsonResponse.status).json(jsonResponse);
   }
+
+  //*Obtener la informacion general
   static async informacionDocTransporte(req, res, next) {
     let jsonResponse = { status: 500, message: "Error", response: "" };
 
@@ -1045,11 +1053,12 @@ class panelcorreccionescontroller {
 
     try {
       const { documento, tipo } = req.body;
-      let data, total, volumen;
-      ({ data, total ,volumen} = await panelcorrecciones.DataDocTransporte({
-        documento,
-        tipo,
-      }));
+      let data, total, volumen, bultos;
+      ({ data, total, volumen, bultos } =
+        await panelcorrecciones.DataDocTransporte({
+          documento,
+          tipo,
+        }));
 
       jsonResponse = {
         status: 200,
@@ -1057,6 +1066,7 @@ class panelcorreccionescontroller {
         response: data,
         peso_total: total,
         volumen_total: volumen,
+        bultos_total: bultos,
       };
     } catch (error) {
       next(error);
@@ -1069,6 +1079,8 @@ class panelcorreccionescontroller {
 
     return res.status(jsonResponse.status).json(jsonResponse);
   }
+
+  //* Enviar datos para cambiar el documento transporte a carta e informe
   static async CambioDocumentoTransporte(req, res, next) {
     let jsonResponse = { status: 500, message: "Error", response: "" };
 
@@ -1157,6 +1169,8 @@ class panelcorreccionescontroller {
 
     return res.status(jsonResponse.status).json(jsonResponse);
   }
+
+  //* Enviar datos para cambiar el peso a carta e informe
   static async CambioPeso(req, res, next) {
     let jsonResponse = { status: 500, message: "Error", response: "" };
 
@@ -1249,6 +1263,8 @@ class panelcorreccionescontroller {
 
     return res.status(jsonResponse.status).json(jsonResponse);
   }
+
+  //* Enviar datos para cambiar el volumen a carta e informe
   static async CambioVolumen(req, res, next) {
     let jsonResponse = { status: 500, message: "Error", response: "" };
 
@@ -1256,7 +1272,9 @@ class panelcorreccionescontroller {
     const validaciones = [
       check("documento").notEmpty().withMessage("documento es requerido."),
       check("tipo").notEmpty().withMessage("tipo es requerido."),
-      check("Volumen_nuevo").notEmpty().withMessage("Volumen_nuevo es requerido."),
+      check("Volumen_nuevo")
+        .notEmpty()
+        .withMessage("Volumen_nuevo es requerido."),
       check("volumen_antiguo")
         .notEmpty()
         .withMessage("volumen_antiguo es requerido."),
@@ -1318,13 +1336,409 @@ class panelcorreccionescontroller {
           log,
         });
       }
-   
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: "Se actualizo el dato correctamente",
+      };
+    } catch (error) {
+      next(error);
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
+
+  //* Enviar datos para cambiar los bultos a carta e informe
+  static async Cambio_Bultos(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("documento").notEmpty().withMessage("documento es requerido."),
+      check("tipo").notEmpty().withMessage("tipo es requerido."),
+      check("Bulto_nuevo").notEmpty().withMessage("Bulto_nuevo es requerido."),
+      check("Bulto_antiguo")
+        .notEmpty()
+        .withMessage("Bulto_antiguo es requerido."),
+      check("cad_id").notEmpty().withMessage("cad_id es requerido."),
+      check("motivoCorreccion")
+        .notEmpty()
+        .withMessage("motivoCorreccion es requerido."),
+      check("solicitante").notEmpty().withMessage("solicitante es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      const {
+        documento,
+        tipo,
+        Bulto_nuevo,
+        Bulto_antiguo,
+        cad_id,
+        motivoCorreccion,
+        solicitante,
+      } = req.body;
+
+      let data,
+        tipoLog = tipo;
+      let registroGuardado = false;
+      if (tipo == "Carta") {
+        tipoLog = "CA";
+      } else if (tipo == "Informe") {
+        tipoLog = "IGA";
+      }
+
+      let log = {
+        tipo: tipoLog,
+        documento,
+        motivoCorreccion,
+        solicitante,
+        dato_nuevo: Bulto_nuevo,
+        dato_antiguo: Bulto_antiguo,
+      };
+
+      data = await panelcorrecciones.Actualizar_Bultos({
+        req,
+        res,
+        next,
+        documento,
+        tipo,
+        Bulto_nuevo,
+        cad_id,
+      });
+      if (data) {
+        registroGuardado = await helpercontroller.GuardarCorrecciones({
+          req,
+          log,
+        });
+      }
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: "Se actualizo el dato correctamente",
+      };
+    } catch (error) {
+      next(error);
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
+
+  //* Obtener los clientes
+  static async Informacion_Clientes(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("documento").notEmpty().withMessage("documento es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      const { documento } = req.body;
+
+      const data = await panelcorrecciones.DataClientes(documento);
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: data,
+      };
+    } catch (error) {
+      next(error);
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
+
+  //* Enviar datos para agregar cliente en carta
+  static async Agregar_Cliente(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("documento_bl")
+        .notEmpty()
+        .withMessage("documento_bl es requerido."), // tipo texto
+      check("tarifa").notEmpty().withMessage("tarifa es requerido."), // Si = 1, No = 0  es tipo texto
+      check("bultos").notEmpty().withMessage("bultos es requerido."), //tipo entero
+      check("peso").notEmpty().withMessage("peso es requerido."), //tipo decimal
+      check("id_carta").notEmpty().withMessage("id_carta es requerido."),
+      check("cbm").notEmpty().withMessage("cbm es requerido."), //tipo decimal
+      check("id_cliente").notEmpty().withMessage("id_cliente es requerido."), //tipo entero
+      check("id_pais").notEmpty().withMessage("id_pais es requerido."), //tipo entero
+      check("motivoCorreccion")
+        .notEmpty()
+        .withMessage("motivoCorreccion es requerido."),
+      check("solicitante").notEmpty().withMessage("solicitante es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      const {
+        documento_bl,
+        tarifa,
+        bultos,
+        peso,
+        id_carta,
+        cbm,
+        id_cliente,
+        id_pais,
+        motivoCorreccion,
+        solicitante,
+      } = req.body;
+
+      let registroGuardado = false;
+
+      let log = {
+        tipo: "Carta",
+        documento: id_carta,
+        motivoCorreccion,
+        solicitante,
+        dato_nuevo: id_cliente,
+        dato_antiguo: "",
+      };
+      let cadTarifa = tarifa == "Si" ? 1 : 0;
+
+      //validar que si el cliente ya existe que no se pueda agregar de nuevo
+      const clienteExiste = await DetalleCA.findOne({
+        where: { cad_cli_id: id_cliente },
+      });
+
+      if (clienteExiste.length > 0 ) {
+        throw new Error(`El cliente ya existe en la carta`);
+      }
+
+      // Agregar el cliente a la carta
+      const data = await DetalleCA.create({
+        cad_cac_id: id_carta,
+        cad_bl: documento_bl.toUpperCase(),
+        cad_cantbultos: bultos,
+        cad_cli_id: id_cliente,
+        cad_peso: parseFloat(peso),
+        cad_cbm: cbm,
+        cad_pai_id: id_pais,
+        cad_tarifa_diferenciada: cadTarifa,
+      });
+
+      if (data) {
+        // obtener las sumatoria de la carta detalle
+        const [sumatoriaCad] = await db.query(`
+          SELECT SUM(cad_cantbultos) bultos,
+            SUM(cad_peso) peso,
+            SUM(cad_cbm) volumen,
+            cad_cac_id carta
+          FROM clg_cad_detalleaceptacion
+          WHERE cad_cac_id = ${id_carta}
+        `);
+
+        if (!sumatoriaCad || sumatoriaCad.length === 0) {
+          throw new Error(`No se encontro sumatoria para carta: ${id_carta}`);
+        }
+
+        //actualizar la carta con los nuevos datos de la sumatoria
+        const [actualizarCarta] = await CAceptacion.update(
+          {
+            cac_totalbl: sumatoriaCad[0]?.bultos,
+            cac_totalpeso: sumatoriaCad[0]?.peso,
+            cac_totalvolumen: sumatoriaCad[0]?.volumen,
+          },
+          {
+            where: { cac_id: id_carta },
+          }
+        );
+
+        if (actualizarCarta === 0) {
+          throw new Error(
+            `No se encontró o no se pudo actualizar la carta con id: ${id_carta}`
+          );
+        }
+
+        const actualizarCartapdf = await helpercontroller.CrearPDFCA({
+          req,
+          res,
+          next,
+          id: id_carta,
+        });
+
+        if (actualizarCartapdf == false) {
+          throw new Error(
+            `No se pudo crear el PDF de la carta con cad_cac_id: ${id_carta}`
+          );
+        }
+
+        registroGuardado = await helpercontroller.GuardarCorrecciones({
+          req,
+          log,
+        });
         jsonResponse = {
           status: 200,
           message: "Success",
-          response: "Se actualizo el dato correctamente",
+          response: "Se agrego el cliente correctamente",
         };
-      
+      } else {
+        jsonResponse = {
+          status: 500,
+          message: "error",
+          response: data,
+        };
+      }
+    } catch (error) {
+      next(error);
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
+
+  //funcion para eliminar clientes tanto en la carta como en el informe relacionado
+  static async Eliminar_cliente(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("cad_id").notEmpty().withMessage("cad_id es requerido."),
+      check("cac_guardalmacen").notEmpty().withMessage("cac_guardalmacen es requerido."),
+      check("id_carta").notEmpty().withMessage("id_carta es requerido."),
+      check("motivoCorreccion")
+        .notEmpty()
+        .withMessage("motivoCorreccion es requerido."),
+      check("solicitante").notEmpty().withMessage("solicitante es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      const { cad_id, id_carta, motivoCorreccion, solicitante,cac_guardalmacen } =
+        req.body;
+
+      let registroGuardado = false;
+
+      let log = {
+        tipo: "Carta",
+        documento: id_carta,
+        motivoCorreccion,
+        solicitante,
+        dato_nuevo: cad_id,
+        dato_antiguo: "",
+      };
+
+      if(cac_guardalmacen == 1 ){
+        throw new Error(`El cliente ya tiene informe guardalmacen no se puede eliminar!!`);
+      }
+
+      // Eliminar el cliente a la carta
+      const data = await DetalleCA.destroy({
+        where: { cad_id: cad_id },
+      });
+
+      if (data) {
+        // obtener las sumatoria de la carta detalle
+        const [sumatoriaCad] = await db.query(`
+          SELECT SUM(cad_cantbultos) bultos,
+            SUM(cad_peso) peso,
+            SUM(cad_cbm) volumen,
+            cad_cac_id carta
+          FROM clg_cad_detalleaceptacion
+          WHERE cad_cac_id = ${id_carta}
+        `);
+
+        if (!sumatoriaCad || sumatoriaCad.length === 0) {
+          throw new Error(`No se encontro sumatoria para carta: ${id_carta}`);
+        }
+
+        //actualizar la carta con los nuevos datos de la sumatoria
+        const [actualizarCarta] = await CAceptacion.update(
+          {
+            cac_totalbl: sumatoriaCad[0]?.bultos,
+            cac_totalpeso: sumatoriaCad[0]?.peso,
+            cac_totalvolumen: sumatoriaCad[0]?.volumen,
+          },
+          {
+            where: { cac_id: id_carta },
+          }
+        );
+
+        if (actualizarCarta === 0) {
+          throw new Error(
+            `No se encontró o no se pudo actualizar la carta con id: ${id_carta}`
+          );
+        }
+
+        const actualizarCartapdf = await helpercontroller.CrearPDFCA({
+          req,
+          res,
+          next,
+          id: id_carta,
+        });
+
+        if (actualizarCartapdf == false) {
+          throw new Error(
+            `No se pudo crear el PDF de la carta con cad_cac_id: ${id_carta}`
+          );
+        }
+
+        registroGuardado = await helpercontroller.GuardarCorrecciones({
+          req,
+          log,
+        });
+
+        jsonResponse = {
+          status: 200,
+          message: "Success",
+          response: "Se elimino el cliente correctamente",
+        };
+      } else {
+        jsonResponse = {
+          status: 500,
+          message: "error",
+          response: data,
+        };
+      }
     } catch (error) {
       next(error);
       jsonResponse = {
