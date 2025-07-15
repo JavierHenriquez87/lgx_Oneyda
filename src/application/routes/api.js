@@ -451,7 +451,6 @@ router.post('/inventario/SaldoIngresosFecha',verifyToken, inventariocontroller.S
 
 router.get('/facturacion/ObtenerCorrelativos', verifyToken,facturacioncontroller.ObtenerCorrelativos);
 
-
 router.post('/facturacion/AgregarCorrelativo', verifyToken,facturacioncontroller.AgregarCorrelativo);
 // {
 //     "rango_inicio":1, 
@@ -470,6 +469,8 @@ router.post('/facturacion/ActualizarCorrelativo', verifyToken,facturacioncontrol
 // }
 
 router.get('/facturacion/ObtenerTipoFactura',verifyToken, facturacioncontroller.ObtenerTipoFactura);
+
+router.post('/facturacion/ObtenerFacturas', verifyToken,facturacioncontroller.ObtenerFacturas);
 
 
 //===========================================================================

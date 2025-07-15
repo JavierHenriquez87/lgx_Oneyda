@@ -1,7 +1,7 @@
 //Validaciones de los datos que envia el usuario
 const { check } = require("express-validator");
 const { realizarValidaciones } = require("../validaciones/validaciones");
-const reportesModels = require("../services/ReportesAduanaService");
+const FacturaService = require("../services/FacurasService");
 //se agregara modelo para clg_corfa_correlativofactura = CorrelativosFac   y clg_cortfac_correlativotipofactura = TipoCorrelativo
 
 //MODELOS A UTILIZAR
@@ -167,6 +167,47 @@ class facturacioncontroller {
       });
     }
   }
+
+  static async ObtenerFacturas(req, res, next) {
+   let jsonResponse = { status: 500, message: "Error", response: "" };
+   
+       // Definir las validaciones de campos dentro del método
+       const validaciones = [
+         check("fecha_desde").notEmpty().withMessage("fecha_desde es requerido."),
+         check("fecha_hasta").notEmpty().withMessage("fecha_hasta es requerido."),
+       ];
+   
+       // Ejecutar las validaciones
+       const resp = await realizarValidaciones(req, res, next, validaciones);
+   
+       if (resp != true) {
+         return res.status(400).json({ errors: resp });
+       }
+   
+       try {
+         const { fecha_desde, fecha_hasta } = req.body;
+         let data, totales;
+   
+          ({data,totales} = await FacturaService.DataFacturas({ fecha_desde, fecha_hasta }));
+   
+         jsonResponse = {
+           status: 200,
+           message: "Success",
+           response: data,
+           totales:totales
+         };
+       } catch (error) {
+         next(error);
+         jsonResponse = {
+           status: 500,
+           message: "Error",
+           response: error.message,
+         };
+       }
+   
+       return res.status(jsonResponse.status).json(jsonResponse);
+  }
+  
 }
 
 module.exports = facturacioncontroller;
