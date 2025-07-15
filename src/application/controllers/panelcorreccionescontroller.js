@@ -13,6 +13,7 @@ const Usuarios = require("../models/UsuarioModel");
 const InformeGuardaAlmancen = require("../models/InformeGuardaAlmacenModel");
 const DetalleCA = require("../models/DetalleCartaAceptacionModel");
 const CAceptacion = require("../models/CartaAceptacionModel");
+const InformeGuardaAlmacen = require("../models/InformeGuardaAlmacenModel");
 
 class panelcorreccionescontroller {
   //* Obtener listado de usuario para el select de solicitantes de correcciones
@@ -1637,7 +1638,6 @@ class panelcorreccionescontroller {
     // Definir las validaciones de campos dentro del método
     const validaciones = [
       check("cad_id").notEmpty().withMessage("cad_id es requerido."),
-      check("cac_guardalmacen").notEmpty().withMessage("cac_guardalmacen es requerido."),
       check("id_carta").notEmpty().withMessage("id_carta es requerido."),
       check("motivoCorreccion")
         .notEmpty()
@@ -1653,7 +1653,7 @@ class panelcorreccionescontroller {
     }
 
     try {
-      const { cad_id, id_carta, motivoCorreccion, solicitante,cac_guardalmacen } =
+      const { cad_id, id_carta, motivoCorreccion, solicitante } =
         req.body;
 
       let registroGuardado = false;
@@ -1667,7 +1667,11 @@ class panelcorreccionescontroller {
         dato_antiguo: "",
       };
 
-      if(cac_guardalmacen == 1 ){
+      let informe = await InformeGuardaAlmacen.findOne({
+        where: { iga_cad_id: cad_id },
+      })
+
+      if(informe ){
         throw new Error(`El cliente ya tiene informe guardalmacen no se puede eliminar!!`);
       }
 

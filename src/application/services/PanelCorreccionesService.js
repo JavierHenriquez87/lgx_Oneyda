@@ -1628,7 +1628,7 @@ async function DataClientes( documento) {
       a.cac_numero,
       a.cac_pdf,
       i.iga_archivo,
-      IFNULL(i.iga_id,'No') iga_id,
+      IFNULL(i.iga_id,'0') iga_id,
       c.cli_nombre,
       a.cac_guardalmacen,
       i.iga_codigo,

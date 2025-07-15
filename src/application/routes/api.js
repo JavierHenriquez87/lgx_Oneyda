@@ -375,7 +375,7 @@ router.post('/panelcorrecciones/Actualizar_Bultos',verifyToken, panelcorreccione
 
 // }
 
-router.post('/panelcorrecciones/Informacion_Clientes',verifyToken, panelcorreccionescontroller.Informacion_Clientes);
+router.post('/panelcorrecciones/Informacion_Clientes', verifyToken,panelcorreccionescontroller.Informacion_Clientes);
 // {
 //     "documento": "152-2022"
 // }
@@ -393,7 +393,7 @@ router.post('/panelcorrecciones/Agregar_Cliente',verifyToken, panelcorreccionesc
 //     "solicitante" : 309
 // }
 
-router.post('/panelcorrecciones/Eliminar_cliente',verifyToken, panelcorreccionescontroller.Eliminar_cliente);
+router.post('/panelcorrecciones/Eliminar_cliente', verifyToken,panelcorreccionescontroller.Eliminar_cliente);
 // {
 //     "cad_id" : 63923,
 //     "id_carta" : 7203,
