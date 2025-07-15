@@ -1273,7 +1273,7 @@ class panelcorreccionescontroller {
     const validaciones = [
       check("documento").notEmpty().withMessage("documento es requerido."),
       check("tipo").notEmpty().withMessage("tipo es requerido."),
-      check("Volumen_nuevo")
+      check("volumen_nuevo")
         .notEmpty()
         .withMessage("Volumen_nuevo es requerido."),
       check("volumen_antiguo")
@@ -1297,7 +1297,7 @@ class panelcorreccionescontroller {
       const {
         documento,
         tipo,
-        Volumen_nuevo,
+        volumen_nuevo,
         volumen_antiguo,
         cad_id,
         motivoCorreccion,
@@ -1318,7 +1318,7 @@ class panelcorreccionescontroller {
         documento,
         motivoCorreccion,
         solicitante,
-        dato_nuevo: Volumen_nuevo,
+        dato_nuevo: volumen_nuevo,
         dato_antiguo: volumen_antiguo,
       };
 
@@ -1328,7 +1328,7 @@ class panelcorreccionescontroller {
         next,
         documento,
         tipo,
-        Volumen_nuevo,
+        volumen_nuevo,
         cad_id,
       });
       if (data) {
@@ -1363,8 +1363,8 @@ class panelcorreccionescontroller {
     const validaciones = [
       check("documento").notEmpty().withMessage("documento es requerido."),
       check("tipo").notEmpty().withMessage("tipo es requerido."),
-      check("Bulto_nuevo").notEmpty().withMessage("Bulto_nuevo es requerido."),
-      check("Bulto_antiguo")
+      check("bulto_nuevo").notEmpty().withMessage("Bulto_nuevo es requerido."),
+      check("bulto_antiguo")
         .notEmpty()
         .withMessage("Bulto_antiguo es requerido."),
       check("cad_id").notEmpty().withMessage("cad_id es requerido."),
@@ -1385,8 +1385,8 @@ class panelcorreccionescontroller {
       const {
         documento,
         tipo,
-        Bulto_nuevo,
-        Bulto_antiguo,
+        bulto_nuevo,
+        bulto_antiguo,
         cad_id,
         motivoCorreccion,
         solicitante,
@@ -1406,8 +1406,8 @@ class panelcorreccionescontroller {
         documento,
         motivoCorreccion,
         solicitante,
-        dato_nuevo: Bulto_nuevo,
-        dato_antiguo: Bulto_antiguo,
+        dato_nuevo: bulto_nuevo,
+        dato_antiguo: bulto_antiguo,
       };
 
       data = await panelcorrecciones.Actualizar_Bultos({
@@ -1416,7 +1416,7 @@ class panelcorreccionescontroller {
         next,
         documento,
         tipo,
-        Bulto_nuevo,
+        bulto_nuevo,
         cad_id,
       });
       if (data) {
@@ -1761,8 +1761,8 @@ class panelcorreccionescontroller {
     // Definir las validaciones de campos dentro del método
     const validaciones = [
       check("id_carta").notEmpty().withMessage("id_carta es requerido."),
-      check("Manifiesto_nuevo").notEmpty().withMessage("Manifiesto_nuevo es requerido."),
-      check("Manifiesto_antiguo").notEmpty().withMessage("Manifiesto_antiguo es requerido."),
+      check("manifiesto_nuevo").notEmpty().withMessage("Manifiesto_nuevo es requerido."),
+      check("manifiesto_antiguo").notEmpty().withMessage("Manifiesto_antiguo es requerido."),
       check("motivoCorreccion").notEmpty().withMessage("motivoCorreccion es requerido."),
       check("solicitante").notEmpty().withMessage("solicitante es requerido."),
     ];
@@ -1777,8 +1777,8 @@ class panelcorreccionescontroller {
     try {
       const {
         id_carta,
-        Manifiesto_nuevo,
-        Manifiesto_antiguo,
+        manifiesto_nuevo,
+        manifiesto_antiguo,
         motivoCorreccion,
         solicitante,
       } = req.body;
@@ -1791,8 +1791,8 @@ class panelcorreccionescontroller {
         documento: id_carta,
         motivoCorreccion,
         solicitante,
-        dato_nuevo: Manifiesto_nuevo,
-        dato_antiguo: Manifiesto_antiguo,
+        dato_nuevo: manifiesto_nuevo,
+        dato_antiguo: manifiesto_antiguo,
       };
 
       data = await panelcorrecciones.Actualizar_Manifiesto({
@@ -1800,7 +1800,78 @@ class panelcorreccionescontroller {
         res,
         next,
         id_carta,
-        Manifiesto_nuevo,
+        manifiesto_nuevo,
+      });
+      if (data) {
+        registroGuardado = await helpercontroller.GuardarCorrecciones({
+          req,
+          log,
+        });
+      }
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: "Se actualizo el dato correctamente",
+      };
+    } catch (error) {
+      next(error);
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
+  
+  static async Cambio_marchamo(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("id_carta").notEmpty().withMessage("id_carta es requerido."),
+      check("marchamo_nuevo").notEmpty().withMessage("Marchamo_nuevo es requerido."),
+      check("marchamo_antiguo").notEmpty().withMessage("Marchamo_antiguo es requerido."),
+      check("motivoCorreccion").notEmpty().withMessage("motivoCorreccion es requerido."),
+      check("solicitante").notEmpty().withMessage("solicitante es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      const {
+        id_carta,
+        marchamo_nuevo,
+        marchamo_antiguo,
+        motivoCorreccion,
+        solicitante,
+      } = req.body;
+
+      let data;
+      let registroGuardado = false;
+
+      let log = {
+        tipo: "Carta",
+        documento: id_carta,
+        motivoCorreccion,
+        solicitante,
+        dato_nuevo: marchamo_nuevo,
+        dato_antiguo: marchamo_antiguo,
+      };
+
+      data = await panelcorrecciones.Actualizar_Marchamo({
+        req,
+        res,
+        next,
+        id_carta,
+        marchamo_nuevo,
       });
       if (data) {
         registroGuardado = await helpercontroller.GuardarCorrecciones({

@@ -1346,14 +1346,14 @@ async function Actualizar_Volumen({
   next,
   documento,
   tipo,
-  Volumen_nuevo,
+  volumen_nuevo,
   cad_id,
 }) {
   let resultado = false;
 
   //actualizar el detalle de la carta
   const [actualizarDCarta] = await DetalleCA.update(
-    { cad_cbm: Volumen_nuevo },
+    { cad_cbm: volumen_nuevo },
     { where: { cad_id } }
   );
 
@@ -1446,7 +1446,7 @@ async function Actualizar_Volumen({
   //actualizar el peso en detalle informe guardaalmacen
 
   const [actualizarInforme] = await InformeGuardaAlmacen.update(
-    { iga_volumen: Volumen_nuevo },
+    { iga_volumen: volumen_nuevo },
     { where: { iga_id: igaId } }
   );
 
@@ -1457,7 +1457,7 @@ async function Actualizar_Volumen({
   }
 
   const [actualizarDInforme] = await DetalleGuardaAlmancen.update(
-    { dga_volumen: Volumen_nuevo },
+    { dga_volumen: volumen_nuevo },
     { where: { dga_iga_id: igaId } }
   );
 
@@ -1491,14 +1491,14 @@ async function Actualizar_Bultos({
   next,
   documento,
   tipo,
-  Bulto_nuevo,
+  bulto_nuevo,
   cad_id,
 }) {
   let resultado = false;
 
   //actualizar el detalle de la carta
   const [actualizarDCarta] = await DetalleCA.update(
-    { cad_cantbultos: Bulto_nuevo },
+    { cad_cantbultos: bulto_nuevo },
     { where: { cad_id } }
   );
 
@@ -1592,7 +1592,7 @@ async function Actualizar_Bultos({
   //actualizar los bultos en detalle informe guardaalmacen
 
   const [actualizarDInforme] = await DetalleGuardaAlmancen.update(
-    { dga_manifestados: Bulto_nuevo },
+    { dga_manifestados: bulto_nuevo },
     { where: { dga_iga_id: igaId } }
   );
 
@@ -1633,6 +1633,10 @@ async function DataClientes( documento) {
       a.cac_guardalmacen,
       i.iga_codigo,
       i.iga_manifiesto,
+      i.iga_marchamo,
+      i.iga_placavehiculo,
+      i.iga_codtransportista,
+      i.iga_ubicacion,
       a.de_lgx
     FROM clg_cac_aceptacion a
     LEFT JOIN clg_cad_detalleaceptacion d ON a.cac_id = d.cad_cac_id
@@ -1667,6 +1671,10 @@ async function DataClientes( documento) {
       cac_guardalmacen: row.cac_guardalmacen,
       iga_codigo: row.iga_codigo,
       iga_manifiesto:row.iga_manifiesto,
+      iga_marchamo:row.iga_marchamo,
+      iga_placavehiculo:row.iga_placavehiculo,
+      iga_codtransportista:row.iga_codtransportista,
+      iga_ubicacion:row.iga_ubicacion,
       de_lgx: row.de_lgx,
     });
   });
@@ -1679,7 +1687,7 @@ async function Actualizar_Manifiesto({
   res,
   next,
   id_carta,
-  Manifiesto_nuevo
+  manifiesto_antiguo
 }) {
   let resultado = false;
 
@@ -1699,7 +1707,61 @@ async function Actualizar_Manifiesto({
   for (const informe of informes) {
     //actualizar cada informe
     const [actualizarInforme] = await InformeGuardaAlmancen.update(
-      { iga_manifiesto: Manifiesto_nuevo },
+      { iga_manifiesto: manifiesto_antiguo },
+      { where: { iga_id: informe.iga_id } }
+    );
+
+    if (actualizarInforme === 0) {
+      throw new Error(
+        `No se encontró o no se pudo actualizar el informe con iga_id: ${informe.iga_id}`
+      );
+    }
+    //actualizar el pdf de cada informe
+    const actualizarpdf = await helpercontroller.CrearPdfInforme({
+      req,
+      res,
+      next,
+      id: informe.iga_id,
+    });
+    if (actualizarpdf === true) {
+      actualizaciones++;
+    }
+  }
+
+  if (actualizaciones === 0) {
+    throw new Error(`No se actualizó ningún informe para cac_id: ${id_carta}`);
+  }
+
+  resultado = true;
+  return resultado;
+}
+
+async function Actualizar_Marchamo({
+  req,
+  res,
+  next,
+  id_carta,
+  marchamo_nuevo
+}) {
+  let resultado = false;
+
+  // Buscar informe relacionado con la carta
+  const informes = await InformeGuardaAlmancen.findAll({
+    where: { iga_cac_id: id_carta }, 
+    attributes: ["iga_codigo", "iga_id"],
+  });
+
+  if (!informes || informes.length === 0) {
+    throw new Error(
+      `No se encontraron informes relacionados con cac_id: ${id_carta}`
+    );
+  }
+  // recorrer el arreglo de informes 
+  let actualizaciones = 0;
+  for (const informe of informes) {
+    //actualizar cada informe
+    const [actualizarInforme] = await InformeGuardaAlmancen.update(
+      { iga_marchamo: marchamo_nuevo },
       { where: { iga_id: informe.iga_id } }
     );
 
@@ -1750,5 +1812,6 @@ module.exports = {
   Actualizar_Volumen,
   Actualizar_Bultos,
   DataClientes,
-  Actualizar_Manifiesto
+  Actualizar_Manifiesto,
+  Actualizar_Marchamo
 };

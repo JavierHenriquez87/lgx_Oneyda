@@ -355,7 +355,7 @@ router.post('/panelcorrecciones/Actualizar_Volumen',verifyToken, panelcorreccion
 //     "documento" : "152-2022",
 //     "tipo" : "Carta",
 //     "cad_id" : 34370,
-//     "Volumen_nuevo" : "21.1002",
+//     "volumen_nuevo" : "21.1002",
 //     "volumen_antiguo" : "11.1002",
 //     "motivoCorreccion" : "Cambio de volumen",
 //     "solicitante" : 309
@@ -368,8 +368,8 @@ router.post('/panelcorrecciones/Actualizar_Bultos',verifyToken, panelcorreccione
 //     "documento" : "152-2022",
 //     "tipo" : "Carta",
 //     "cad_id" : 34370,
-//     "Bulto_nuevo" : "13",
-//     "Bulto_antiguo" : "13",
+//     "bulto_nuevo" : "13",
+//     "bulto_antiguo" : "13",
 //     "motivoCorreccion" : "Cambio de volumen",
 //     "solicitante" : 309
 
@@ -407,13 +407,21 @@ router.post('/panelcorrecciones/Eliminar_cliente', verifyToken,panelcorrecciones
 router.post('/panelcorrecciones/Cambio_manifiesto',verifyToken, panelcorreccionescontroller.Cambio_manifiesto);
 // {
 //     "id_carta" : 7203,
-//     "Manifiesto_nuevo" : "MIA-SAV 4675",
-//     "Manifiesto_antiguo" : "MIA-SAV 4674",
+//     "manifiesto_nuevo" : "MIA-SAV 4675",
+//     "manifiesto_antiguo" : "MIA-SAV 4674",
+//     "motivoCorreccion" : "Cambio de fecha",
+//     "solicitante" : 309
+// }
+router.post('/panelcorrecciones/Cambio_marchamo', verifyToken,panelcorreccionescontroller.Cambio_marchamo);
+// {
+   
+//     "id_carta" : 7203,
+//     "marchamo_nuevo" : "SATGT4763669",
+//     "marchamo_antiguo" : "SATGT4763668",
 //     "motivoCorreccion" : "Cambio de fecha",
 //     "solicitante" : 309
 
 // }
-
 //===========================================================================
 // TODO: INVENTARIO
 //===========================================================================
