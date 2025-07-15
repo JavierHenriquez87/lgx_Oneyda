@@ -1754,6 +1754,77 @@ class panelcorreccionescontroller {
 
     return res.status(jsonResponse.status).json(jsonResponse);
   }
+  
+  static async Cambio_manifiesto(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("id_carta").notEmpty().withMessage("id_carta es requerido."),
+      check("Manifiesto_nuevo").notEmpty().withMessage("Manifiesto_nuevo es requerido."),
+      check("Manifiesto_antiguo").notEmpty().withMessage("Manifiesto_antiguo es requerido."),
+      check("motivoCorreccion").notEmpty().withMessage("motivoCorreccion es requerido."),
+      check("solicitante").notEmpty().withMessage("solicitante es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      const {
+        id_carta,
+        Manifiesto_nuevo,
+        Manifiesto_antiguo,
+        motivoCorreccion,
+        solicitante,
+      } = req.body;
+
+      let data;
+      let registroGuardado = false;
+
+      let log = {
+        tipo: "Carta",
+        documento: id_carta,
+        motivoCorreccion,
+        solicitante,
+        dato_nuevo: Manifiesto_nuevo,
+        dato_antiguo: Manifiesto_antiguo,
+      };
+
+      data = await panelcorrecciones.Actualizar_Manifiesto({
+        req,
+        res,
+        next,
+        id_carta,
+        Manifiesto_nuevo,
+      });
+      if (data) {
+        registroGuardado = await helpercontroller.GuardarCorrecciones({
+          req,
+          log,
+        });
+      }
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: "Se actualizo el dato correctamente",
+      };
+    } catch (error) {
+      next(error);
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
 
   static async pruebaspdfinforme(req, res, next) {
     let jsonResponse = { status: 500, message: "Error", response: "" };

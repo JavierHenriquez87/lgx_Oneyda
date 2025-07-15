@@ -375,7 +375,7 @@ router.post('/panelcorrecciones/Actualizar_Bultos',verifyToken, panelcorreccione
 
 // }
 
-router.post('/panelcorrecciones/Informacion_Clientes', verifyToken,panelcorreccionescontroller.Informacion_Clientes);
+router.post('/panelcorrecciones/Informacion_Clientes',verifyToken,panelcorreccionescontroller.Informacion_Clientes);
 // {
 //     "documento": "152-2022"
 // }
@@ -402,6 +402,18 @@ router.post('/panelcorrecciones/Eliminar_cliente', verifyToken,panelcorrecciones
 //     "motivoCorreccion" : "Agregar cliente nuevo a carta 152-2022",
 //     "solicitante" : 309
 // }
+
+//*para obtener los manifiesto seria esta misma == > panelcorrecciones/Informacion_Clientes
+router.post('/panelcorrecciones/Cambio_manifiesto',verifyToken, panelcorreccionescontroller.Cambio_manifiesto);
+// {
+//     "id_carta" : 7203,
+//     "Manifiesto_nuevo" : "MIA-SAV 4675",
+//     "Manifiesto_antiguo" : "MIA-SAV 4674",
+//     "motivoCorreccion" : "Cambio de fecha",
+//     "solicitante" : 309
+
+// }
+
 //===========================================================================
 // TODO: INVENTARIO
 //===========================================================================
