@@ -471,7 +471,15 @@ router.post('/facturacion/ActualizarCorrelativo', verifyToken,facturacioncontrol
 router.get('/facturacion/ObtenerTipoFactura',verifyToken, facturacioncontroller.ObtenerTipoFactura);
 
 router.post('/facturacion/ObtenerFacturas', verifyToken,facturacioncontroller.ObtenerFacturas);
-
+// {    
+//     "fecha_desde": "2025-06-01",
+//     "fecha_hasta":"2025-06-19"
+// }
+router.post('/facturacion/DetalleFacturas',verifyToken,facturacioncontroller.DetalleFacturas);
+// {    
+//     "factura_id": 72627
+// }
+//router.post('/facturacion/AnularFactura',facturacioncontroller.AnularFactura);
 
 //===========================================================================
 module.exports = router;

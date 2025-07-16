@@ -1,12 +1,13 @@
 //Validaciones de los datos que envia el usuario
 const { check } = require("express-validator");
 const { realizarValidaciones } = require("../validaciones/validaciones");
-const FacturaService = require("../services/FacurasService");
+const FacturaService = require("../services/FacturasService");
 //se agregara modelo para clg_corfa_correlativofactura = CorrelativosFac   y clg_cortfac_correlativotipofactura = TipoCorrelativo
 
 //MODELOS A UTILIZAR
 const CorrelativosFac = require("../models/CorrelativosFacturaModel");
 const TipoCorrelativo = require("../models/TipoCorrelativoModel");
+const Facturas = require("../models/FacturasModel");
 
 ////
 class facturacioncontroller {
@@ -50,7 +51,9 @@ class facturacioncontroller {
   static async AgregarCorrelativo(req, res, next) {
     // Definir las validaciones de campos dentro del método
     const validaciones = [
-      check("rango_inicio").notEmpty().withMessage("rango_inicio es requerido."),
+      check("rango_inicio")
+        .notEmpty()
+        .withMessage("rango_inicio es requerido."),
       check("rango_final").notEmpty().withMessage("rango_final es requerido."),
       check("estado").notEmpty().withMessage("estado es requerido."), // 0 = inactivo, 1 = activo
       check("tipo").notEmpty().withMessage("tipo es requerido."), //seria el id
@@ -79,19 +82,15 @@ class facturacioncontroller {
     const data = await CorrelativosFac.create(datos);
 
     if (data && data.corfa_id) {
-
       return res.status(200).json({
         status: 200,
         response: "Correlativo creado exitosamente",
       });
-
     } else {
       return res.status(400).json({
-        
         status: 400,
         message: "No se pudo crear el correlativo",
         response: null,
-
       });
     }
   }
@@ -100,8 +99,10 @@ class facturacioncontroller {
   static async ActualizarCorrelativo(req, res, next) {
     // Definir las validaciones de campos dentro del método
     const validaciones = [
-      check("corfa_id").notEmpty().withMessage("corfa_id es requerido."),//el id del correlativo
-      check("rango_inicio").notEmpty().withMessage("rango_inicio es requerido."),
+      check("corfa_id").notEmpty().withMessage("corfa_id es requerido."), //el id del correlativo
+      check("rango_inicio")
+        .notEmpty()
+        .withMessage("rango_inicio es requerido."),
       check("rango_final").notEmpty().withMessage("rango_final es requerido."),
       check("estado").notEmpty().withMessage("estado es requerido."), // 0 = inactivo, 1 = activo
     ];
@@ -114,7 +115,7 @@ class facturacioncontroller {
     }
 
     //Guardamos en estas variables la data que envió el usuario
-    const { rango_inicio, rango_final,estado, corfa_id } = req.body;
+    const { rango_inicio, rango_final, estado, corfa_id } = req.body;
 
     let datosActualizar = {
       corfa_rangoinicio: rango_inicio,
@@ -129,26 +130,22 @@ class facturacioncontroller {
     });
 
     if (actualizados > 0) {
-
       return res.status(200).json({
         status: 200,
         message: "Correlativo actualizado exitosamente",
       });
-
     } else {
-
       return res.status(404).json({
         status: 404,
         message: "No se encontró el correlativo para actualizar",
       });
-
     }
   }
 
   static async ObtenerTipoFactura(req, res, next) {
     try {
       const data = await TipoCorrelativo.findAll({
-        attributes:[ "cortfac_id","cortfac_tipofactura"]
+        attributes: ["cortfac_id", "cortfac_tipofactura"],
       });
 
       return res.status(200).json({
@@ -157,7 +154,6 @@ class facturacioncontroller {
         response: data,
       });
     } catch (error) {
-      
       next(error);
 
       return res.status(500).json({
@@ -169,45 +165,129 @@ class facturacioncontroller {
   }
 
   static async ObtenerFacturas(req, res, next) {
-   let jsonResponse = { status: 500, message: "Error", response: "" };
-   
-       // Definir las validaciones de campos dentro del método
-       const validaciones = [
-         check("fecha_desde").notEmpty().withMessage("fecha_desde es requerido."),
-         check("fecha_hasta").notEmpty().withMessage("fecha_hasta es requerido."),
-       ];
-   
-       // Ejecutar las validaciones
-       const resp = await realizarValidaciones(req, res, next, validaciones);
-   
-       if (resp != true) {
-         return res.status(400).json({ errors: resp });
-       }
-   
-       try {
-         const { fecha_desde, fecha_hasta } = req.body;
-         let data, totales;
-   
-          ({data,totales} = await FacturaService.DataFacturas({ fecha_desde, fecha_hasta }));
-   
-         jsonResponse = {
-           status: 200,
-           message: "Success",
-           response: data,
-           totales:totales
-         };
-       } catch (error) {
-         next(error);
-         jsonResponse = {
-           status: 500,
-           message: "Error",
-           response: error.message,
-         };
-       }
-   
-       return res.status(jsonResponse.status).json(jsonResponse);
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("fecha_desde").notEmpty().withMessage("fecha_desde es requerido."),
+      check("fecha_hasta").notEmpty().withMessage("fecha_hasta es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      const { fecha_desde, fecha_hasta } = req.body;
+      let data, totales;
+
+      ({ data, totales } = await FacturaService.DataFacturas({
+        fecha_desde,
+        fecha_hasta,
+      }));
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: data,
+        totales: totales,
+      };
+    } catch (error) {
+      next(error);
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
   }
+
+  static async DetalleFacturas(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("factura_id").notEmpty().withMessage("factura_id es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+      const { factura_id } = req.body;
+      let data, detalles;
+
+      ({ data, detalles } = await FacturaService.DataDetalleFacturas(
+        factura_id
+      ));
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: data,
+        detalles: detalles,
+      };
+    } catch (error) {
+      next(error);
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
+  // static async AnularFactura(req, res, next) {
+  //   let jsonResponse = { status: 500, message: "Error", response: "" };
+
+  //   // Definir las validaciones de campos dentro del método
+  //   const validaciones = [
+  //     check("factura_id").notEmpty().withMessage("factura_id es requerido."),
+  //     check("comentario").notEmpty().withMessage("comentario es requerido."),
+  //   ];
+
+  //   // Ejecutar las validaciones
+  //   const resp = await realizarValidaciones(req, res, next, validaciones);
+
+  //   if (resp != true) {
+  //     return res.status(400).json({ errors: resp });
+  //   }
+
+  //   try {
+  //     const { factura_id, comentario } = req.body;
+  //     let data = await Facturas.update(
+  //       { fac_anulada: 1, fac_motivo_anulacion: comentario },
+  //       { where: { fact_id: factura_id } }
+  //     );
+
+  //     jsonResponse = {
+  //       status: 200,
+  //       message: "Success",
+  //       response: data,
+  //       detalles: detalles,
+  //     };
+  //   } catch (error) {
+  //     next(error);
+  //     jsonResponse = {
+  //       status: 500,
+  //       message: "Error",
+  //       response: error.message,
+  //     };
+  //   }
   
+
+  //   return res.status(jsonResponse.status).json(jsonResponse);
+  // }
 }
 
 module.exports = facturacioncontroller;
