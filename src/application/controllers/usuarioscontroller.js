@@ -434,7 +434,7 @@ class usuarioscontroller {
                 // Datos a actualizar
                 {
                     acceso_logix: acceso_logix,
-                    modificado_por: req.user.log_usu_id + ' - ' + req.user.log_username,
+                    modificado_por: "req.user.log_usu_id + ' - ' + req.user.log_username",
                     fecha_modificacion: moment().format()
                 },
                 {

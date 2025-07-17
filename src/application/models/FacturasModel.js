@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize');
 const db = require('../../database/db');
 const DetalleFactura = require('./DetalleFacturaModel');
 const CortFacturaCorrelativo = require('./CortFacturaCorrelativoModel');
+const Clientes = require('./ClientesModel');
 
 const Facturas = db.define('clg_fac_factura', {
     fact_id: {
@@ -169,5 +170,6 @@ const Facturas = db.define('clg_fac_factura', {
 
 Facturas.hasMany(DetalleFactura, { foreignKey: 'detfac_fac_id' });
 Facturas.belongsTo(CortFacturaCorrelativo, { foreignKey: 'fac_cortfac_id' });
+Facturas.belongsTo(Clientes, { foreignKey: 'fac_cliente_id' });
 
 module.exports = Facturas;

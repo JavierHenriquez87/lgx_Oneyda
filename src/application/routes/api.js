@@ -62,10 +62,10 @@ router.post('/iconosmenus',
 //===========================================================================
 //TODO: USUARIOS
 //===========================================================================
-router.post('/usuario/obtenerusuarios', verifyToken, usuarioscontroller.ObtenerUsuarios);
+router.post('/usuario/obtenerusuarios',  usuarioscontroller.ObtenerUsuarios);
 router.post('/usuario/crearusuario', verifyToken, upload.array('fotografia'), usuarioscontroller.CrearUsuario);
 router.post('/usuario/editarusuario', verifyToken, upload.array('fotografia'), usuarioscontroller.EditarUsuario);
-router.post('/usuario/estadousuario', verifyToken, usuarioscontroller.EstadoUsuario);
+router.post('/usuario/estadousuario', usuarioscontroller.EstadoUsuario);
 
 
 //===========================================================================
@@ -479,7 +479,12 @@ router.post('/facturacion/DetalleFacturas',verifyToken,facturacioncontroller.Det
 // {    
 //     "factura_id": 72627
 // }
-//router.post('/facturacion/AnularFactura',facturacioncontroller.AnularFactura);
+router.post('/facturacion/AnularFactura',facturacioncontroller.AnularFactura);
+// {    
+//     "factura_id": 72627,
+//     "comentario":"Es una prueba de anulacion"
+// }
+router.post('/facturacion/GenerarFacturaPDF',facturacioncontroller.GenerarFacturaPDF);
 
 //===========================================================================
 module.exports = router;

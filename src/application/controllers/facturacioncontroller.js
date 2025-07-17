@@ -8,6 +8,7 @@ const FacturaService = require("../services/FacturasService");
 const CorrelativosFac = require("../models/CorrelativosFacturaModel");
 const TipoCorrelativo = require("../models/TipoCorrelativoModel");
 const Facturas = require("../models/FacturasModel");
+const helpercontroller = require("./helpercontroller");
 
 ////
 class facturacioncontroller {
@@ -141,7 +142,7 @@ class facturacioncontroller {
       });
     }
   }
-
+   //FUNCION PARA OBTENER TIPOS DE FACTURA
   static async ObtenerTipoFactura(req, res, next) {
     try {
       const data = await TipoCorrelativo.findAll({
@@ -163,7 +164,7 @@ class facturacioncontroller {
       });
     }
   }
-
+   //FUNCION PARA OBTENER LAS FACTURAS POR PERIODO DE FECHA
   static async ObtenerFacturas(req, res, next) {
     let jsonResponse = { status: 500, message: "Error", response: "" };
 
@@ -206,7 +207,7 @@ class facturacioncontroller {
 
     return res.status(jsonResponse.status).json(jsonResponse);
   }
-
+   //FUNCION PARA OBTENER EL DETALLE DE LAS FACTURAS
   static async DetalleFacturas(req, res, next) {
     let jsonResponse = { status: 500, message: "Error", response: "" };
 
@@ -247,47 +248,96 @@ class facturacioncontroller {
 
     return res.status(jsonResponse.status).json(jsonResponse);
   }
-  // static async AnularFactura(req, res, next) {
-  //   let jsonResponse = { status: 500, message: "Error", response: "" };
+   //FUNCION PARA ANULAR UNA FACTURA
+  static async AnularFactura(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
 
-  //   // Definir las validaciones de campos dentro del método
-  //   const validaciones = [
-  //     check("factura_id").notEmpty().withMessage("factura_id es requerido."),
-  //     check("comentario").notEmpty().withMessage("comentario es requerido."),
-  //   ];
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("factura_id").notEmpty().withMessage("factura_id es requerido."),
+      check("comentario").notEmpty().withMessage("comentario es requerido."),
+    ];
 
-  //   // Ejecutar las validaciones
-  //   const resp = await realizarValidaciones(req, res, next, validaciones);
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
 
-  //   if (resp != true) {
-  //     return res.status(400).json({ errors: resp });
-  //   }
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
 
-  //   try {
-  //     const { factura_id, comentario } = req.body;
-  //     let data = await Facturas.update(
-  //       { fac_anulada: 1, fac_motivo_anulacion: comentario },
-  //       { where: { fact_id: factura_id } }
-  //     );
+    try {
 
-  //     jsonResponse = {
-  //       status: 200,
-  //       message: "Success",
-  //       response: data,
-  //       detalles: detalles,
-  //     };
-  //   } catch (error) {
-  //     next(error);
-  //     jsonResponse = {
-  //       status: 500,
-  //       message: "Error",
-  //       response: error.message,
-  //     };
-  //   }
-  
+      const { factura_id, comentario } = req.body;
 
-  //   return res.status(jsonResponse.status).json(jsonResponse);
-  // }
+      await Facturas.update(
+
+        { fac_anulada: 1, fac_motivo_anulacion: comentario },
+        { where: { fact_id: factura_id } }
+
+      );
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: "Se anulo la factura correctamente",
+      };
+
+    } catch (error) {
+
+      next(error);
+
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
+   //FUNCION PARA GENERAR ARCHIVO PDF DE LA FACTURA
+  static async GenerarFacturaPDF(req, res, next) {
+    let jsonResponse = { status: 500, message: "Error", response: "" };
+
+    // Definir las validaciones de campos dentro del método
+    const validaciones = [
+      check("factura_id").notEmpty().withMessage("factura_id es requerido."),
+    ];
+
+    // Ejecutar las validaciones
+    const resp = await realizarValidaciones(req, res, next, validaciones);
+
+    if (resp != true) {
+      return res.status(400).json({ errors: resp });
+    }
+
+    try {
+
+      const { factura_id } = req.body;
+
+      let data = await helpercontroller.DataFacturaPDF({req,res,next,factura_id});
+
+      jsonResponse = {
+        status: 200,
+        message: "Success",
+        response: "Se anulo la factura correctamente",
+      };
+
+    } catch (error) {
+
+      next(error);
+
+      jsonResponse = {
+        status: 500,
+        message: "Error",
+        response: error.message,
+      };
+
+    }
+
+    return res.status(jsonResponse.status).json(jsonResponse);
+  }
 }
 
 module.exports = facturacioncontroller;

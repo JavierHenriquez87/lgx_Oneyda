@@ -2224,7 +2224,8 @@ class informesguardaalmacencontroller {
                 dataOriginal.iga_codigo = codigocorrelativo;
                 dataOriginal.iga_fechaabandono = infoGA_Creado?.iga_fechaabandono ? formatFechaSafe(infoGA_Creado.iga_fechaabandono) : null;
                 dataOriginal.iga_fechaingreso = infoGA_Creado?.iga_fechaingreso ? formatFechaSafe(infoGA_Creado.iga_fechaingreso) : null;
-                dataOriginal.iga_fecha = infoGA_Creado?.iga_fecha ? formatFechaSafe(infoGA_Creado.iga_fecha) : null;
+                //si no viene la fecha que se guarde la fecha actual  CAMBIO AGREGADO AQUI en : new Date();
+                dataOriginal.iga_fecha = infoGA_Creado?.iga_fecha ? formatFechaSafe(infoGA_Creado.iga_fecha) : new Date();
                 dataOriginal.iga_fecha_recepcionado = infoGA_Creado?.iga_fecha_recepcionado ? formatFechaSafe(infoGA_Creado.iga_fecha_recepcionado) : null;
                 dataOriginal.iga_archivo = null;
                 dataOriginal.iga_estado = 0;

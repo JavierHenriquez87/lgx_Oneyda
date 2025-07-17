@@ -54,10 +54,10 @@ const CBM_Consignatarios = db.define('wms_consignatario_ca', {
         type: DataTypes.STRING,
         allowNull: true
     },
-    ubicacion_mercaderia: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
+    // ubicacion_mercaderia: {
+    //     type: DataTypes.STRING,
+    //     allowNull: true
+    // },//Eliminar este campo porque no existe en la tabla
     iga_id: {
         type: DataTypes.INTEGER,
         allowNull: true
