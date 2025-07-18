@@ -1241,18 +1241,14 @@ class panelcorreccionescontroller {
           log,
         });
       }
-      if (data == true) {
+      
         jsonResponse = {
           status: 200,
           message: "Success",
           response: "Se actualizo el dato correctamente",
         };
-      }
-      jsonResponse = {
-        status: 500,
-        message: "error",
-        response: "No se  actualizo el dato correctamente",
-      };
+      
+      
     } catch (error) {
       next(error);
       jsonResponse = {

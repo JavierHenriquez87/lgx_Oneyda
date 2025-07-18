@@ -309,10 +309,10 @@ router.post('/panelcorrecciones/ActualizarPaisDestino', verifyToken, panelcorrec
 router.post('/panelcorrecciones/CambioCliente', verifyToken,panelcorreccionescontroller.CambioCliente);
 
 //*para obtener los datos del transportista seria esta misma == > panelcorrecciones/ConsultarDocumento
-router.post('/panelcorrecciones/CambioTransportista',  verifyToken,panelcorreccionescontroller.CambioTransportista);
+router.post('/panelcorrecciones/CambioTransportista',panelcorreccionescontroller.CambioTransportista);
 
 //*para obtener los datos de la aduana seria esta misma == > panelcorrecciones/ConsultarDocumento
-router.post('/panelcorrecciones/CambioAduana',verifyToken, panelcorreccionescontroller.CambioAduana);
+router.post('/panelcorrecciones/CambioAduana', panelcorreccionescontroller.CambioAduana);
 
 //*para obtener los datos del contenedor seria esta misma == > panelcorrecciones/ConsultarDocumento
 router.post('/panelcorrecciones/CambioContenedor', verifyToken,panelcorreccionescontroller.CambioContenedor);

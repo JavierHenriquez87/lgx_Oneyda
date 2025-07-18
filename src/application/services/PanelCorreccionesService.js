@@ -1220,7 +1220,7 @@ async function Actualizar_Peso({
     { where: { cad_id } }
   );
 
-  if (actualizarDCarta === 0) {
+  if (actualizarDCarta == 0) {
     throw new Error(
       `No se encontró o no se pudo actualizar la carta con cad_id: ${cad_id}`
     );
