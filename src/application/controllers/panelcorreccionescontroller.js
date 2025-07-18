@@ -400,7 +400,7 @@ class panelcorreccionescontroller {
       jsonResponse = {
         status: 200,
         message: "Success",
-        response: "Documento modificado con éxito",
+        response: data,
       };
     } catch (error) {
       next(error);

@@ -105,11 +105,9 @@ async function data_busquedaPorCarta({ documento, tipo }) {
         ? row.informeArchivo
         : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/" +
           row.informeArchivo;
-    let salidas_pdf = row.salida
-      ? "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_salidas_aduana/" +
-        row.salida +
-        ".pdf"
-      : row.salida;
+    let salidas_pdf = row.de_lgx == 1
+      ?  row.salida
+      : "https://wms-assets.nyc3.digitaloceanspaces.com/LGX/DocumentosSal/Salidas/" + row.salida + ".pdf";
 
     let manifiesto_pdf =
       row.de_lgx == 1 || row.manifiestoPdf?.startsWith("https")
@@ -235,10 +233,9 @@ async function data_fecha_salida({ documento }) {
   const datos = [];
 
   rows.forEach((row, index) => {
-    let salida_pdf = row.archivo
-      ? "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_salidas_aduana/" +
-        row.archivo
-      : "";
+    let salida_pdf = row.de_lgx == 1
+      ?  row.archivo
+      : "https://wms-assets.nyc3.digitaloceanspaces.com/LGX/DocumentosSal/Salidas/" + row.archivo + ".pdf";
 
     datos.push({
       index: index + 1,

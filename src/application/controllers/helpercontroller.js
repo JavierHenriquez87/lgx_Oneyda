@@ -835,7 +835,7 @@ class helpercontroller {
         })
         .promise();
 
-      return true;
+      return path_carta;
     } catch (error) {
       console.error("Error al crear PDF de salida simple:", error);
       throw new Error(error.message);
