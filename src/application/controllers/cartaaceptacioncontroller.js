@@ -763,7 +763,7 @@ class cartaaceptacioncontroller {
           });
 
           const datalogs = {
-            usuario: "oneyda chavez",
+           usuario: req.user.log_username,
             tipo_de_evento: "Crear Detalle C.A.",
             fecha_del_evento: moment().format(),
             tabla_afectada: "clg_cad_detalleaceptacion",
@@ -786,9 +786,7 @@ class cartaaceptacioncontroller {
       }
 
       if (pdf == false) {
-        throw new Error(
-          `No se creo el pdf de la carta: ${saveCarta.cac_id}`
-        );
+        throw new Error(`No se creo el pdf de la carta: ${saveCarta.cac_id}`);
       }
 
       // Final response
@@ -912,7 +910,7 @@ class cartaaceptacioncontroller {
   static async EditarCA(req, res, next) {
     var jsonResponse = { status: 500, message: "Error", response: "" };
 
-    //creamos el dato para subirlo a DO Space
+    // Creamos el dato para subirlo a DO Space
     const do_path = process.env.DO_SPACES_PATH;
     const do_spe = process.env.DO_SPACES_ENDPOINT || "";
     const do_spk = process.env.DO_SPACES_KEY;
@@ -931,21 +929,18 @@ class cartaaceptacioncontroller {
         .withMessage("cac_tipocontenedor is required."),
       check("cac_tra_id").notEmpty().withMessage("cac_tra_id is required."),
       check("cac_adu_id").notEmpty().withMessage("cac_adu_id is required."),
-      check("cac_tdt_id").notEmpty().withMessage("cac_adu_id is required."),
+      check("cac_tdt_id").notEmpty().withMessage("cac_tdt_id is required."),
       check("motivo_correccion")
         .notEmpty()
         .withMessage("motivo_correccion is required."),
     ];
 
-    // Ejecutar las validaciones
     const resp = await realizarValidaciones(req, res, next, validaciones);
-
-    if (resp != true) {
+    if (resp !== true) {
       return res.status(400).json({ errors: resp });
     }
 
     try {
-      //Guardamos en estas variables la data que envió el usuario
       const {
         cac_id,
         cac_contenedor,
@@ -956,53 +951,52 @@ class cartaaceptacioncontroller {
         motivo_correccion,
       } = req.body;
 
-      //! OBTENEMOS INFORMACION DE LA CARTA Y SETEAMOS LOS VALORES ACTUALES QUE TIENE LA CARTA EN EL BL, PESO Y CBM
       const cartaA = await CartaAceptacion.findByPk(cac_id);
+      if (!cartaA) {
+        return res
+          .status(404)
+          .json({ status: 404, message: "Carta no encontrada." });
+      }
+
       let saveCarta = null;
       let cac_totalbl = 0;
       let cac_totalpeso = 0;
       let cac_totalcbm = 0;
 
-      //! VALIDAMOS QUE EL OBJETO TRAIGA AL MENOS UN CLIENTE REGISTRADO
       if (
         !req.body.cac_detalle_clientes ||
         req.body.cac_detalle_clientes.trim() === ""
       ) {
-        return res.status(400).json({
-          success: false,
-          message: "Debe enviar al menos un cliente..",
-        });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "Debe enviar al menos un cliente..",
+          });
       }
 
-      const dataArrayClientes = JSON.parse(req.body.cac_detalle_clientes); // Convertir el string JSON a array
-
-      // Validar que sea un array y que tenga al menos un objeto
+      const dataArrayClientes = JSON.parse(req.body.cac_detalle_clientes);
       if (!Array.isArray(dataArrayClientes) || dataArrayClientes.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: "Debe enviar al menos un cliente.",
-        });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "Debe enviar al menos un cliente.",
+          });
       }
 
-      //! OBTENEMOS LA INFORMACIÓN DEL ARCHIVO QUE ACABAMOS DE ADJUNTAR A LA CARTA
-      const archivoManifiesto = req.files["cac_manifiesto_archivo"]
-        ? req.files["cac_manifiesto_archivo"][0]
-        : null;
+      const archivoManifiesto =
+        req.files?.["cac_manifiesto_archivo"]?.[0] || null;
 
-      //TODO: Actualizamos el manifiesto de la carta de aceptación si al editar se envia de nuevo
       if (archivoManifiesto) {
-        // Obtener la extensión del archivo usando la función
-        let extension = await helpercontroller.getExtensionFromMimeType(
+        const extension = await helpercontroller.getExtensionFromMimeType(
           archivoManifiesto.mimetype
         );
-        // Nombre del archivo
         const filename = cartaA.cac_numero + "-manifiesto" + extension;
-        path = do_path + "Manifiestos/" + filename;
-
-        const spacesEndpoint = new AWS.Endpoint(do_spe + "Manifiestos/");
+        path = `${do_path}Manifiestos/${filename}`;
 
         const s3 = new AWS.S3({
-          endpoint: spacesEndpoint,
+          endpoint: new AWS.Endpoint(`${do_spe}Manifiestos/`),
           accessKeyId: do_spk,
           secretAccessKey: do_sps,
         });
@@ -1011,10 +1005,7 @@ class cartaaceptacioncontroller {
           .putObject({
             Bucket: do_spn,
             Key: filename,
-            Body: Buffer.from(
-              archivoManifiesto.buffer,
-              archivoManifiesto.buffer.length
-            ),
+            Body: archivoManifiesto.buffer,
             ContentLength: archivoManifiesto.size,
             ContentType: archivoManifiesto.mimetype,
             ACL: "public-read",
@@ -1022,83 +1013,42 @@ class cartaaceptacioncontroller {
           .promise();
       }
 
-      //TODO: Con esto obtenemos los totales de bl, peso y volumen
       for (const cliente of dataArrayClientes) {
-        try {
-          cac_totalbl += parseFloat(cliente.cad_cantbultos) || 0;
-          cac_totalpeso += parseFloat(cliente.cad_peso) || 0;
-          cac_totalcbm += parseFloat(cliente.cad_cbm) || 0;
+        cac_totalbl += parseFloat(cliente.cad_cantbultos) || 0;
+        cac_totalpeso += parseFloat(cliente.cad_peso) || 0;
+        cac_totalcbm += parseFloat(cliente.cad_cbm) || 0;
 
-          let pais = await Pais.findOne({
-            where: {
-              pai_id: cliente.cad_pai_id,
-            },
-          });
+        const pais = await Pais.findOne({
+          where: { pai_id: cliente.cad_pai_id },
+        });
+        cliente.pais = pais?.pai_nombre || "Desconocido";
 
-          // Si se encontró el país, asignamos el pais del cliente
-          cliente.pais = pais ? pais.pai_nombre : "Desconocido";
-
-          let dataCliente = await Clientes.findOne({
-            where: {
-              cli_id: cliente.cad_cli_id,
-            },
-          });
-
-          // Si se encontró el cliente, asignamos el nombre al cliente
-          cliente.cliente = dataCliente
-            ? dataCliente.cli_nombre
-            : "Desconocido";
-        } catch (error) {
-          //! Registramos el error capturado
-          try {
-            next(error);
-          } catch (e) {}
-        }
+        const dataCliente = await Clientes.findOne({
+          where: { cli_id: cliente.cad_cli_id },
+        });
+        cliente.cliente = dataCliente?.cli_nombre || "Desconocido";
       }
 
       cac_totalpeso = cac_totalpeso.toFixed(3);
       cac_totalcbm = cac_totalcbm.toFixed(3);
 
-      //! SI PATH ES DIFERENTE DE NULL ES PORQUE SI SE ENVIO UN NUEVO MANIFIESTO Y ACTUALIZAMOS
+      const cartaData = {
+        cac_contenedor,
+        cac_tipocontenedor,
+        cac_tra_id,
+        cac_adu_id: parseInt(cac_adu_id, 10),
+        cac_tdt_id,
+      };
       if (path) {
-        saveCarta = await CartaAceptacion.update(
-          {
-            cac_contenedor,
-            cac_tipocontenedor,
-            cac_tra_id,
-            cac_adu_id: parseInt(cac_adu_id, 10),
-            cac_tdt_id,
-            cac_manifiesto_archivo: path,
-            de_lgx: true,
-          },
-          {
-            where: {
-              cac_id: cac_id,
-            },
-          }
-        );
-      } else {
-        saveCarta = await CartaAceptacion.update(
-          {
-            cac_contenedor,
-            cac_tipocontenedor,
-            cac_tra_id,
-            cac_tdt_id,
-            cac_adu_id: parseInt(cac_adu_id, 10),
-          },
-          {
-            where: {
-              cac_id: cac_id,
-            },
-          }
-        );
+        cartaData.cac_manifiesto_archivo = path;
+        cartaData.de_lgx = true;
       }
 
-      //! ====================================================================
-      //* GUARDAMOS EL LOGS DE REGISTRO DE LA ACCIÓN
-      //! ====================================================================
+      saveCarta = await CartaAceptacion.update(cartaData, {
+        where: { cac_id },
+      });
+
       try {
-        // Definimos la data que se guardara en el logs de usuarios
         const datalogs = {
           usuario: req.user.log_username,
           tipo_de_evento: "Editar Carta Aceptación",
@@ -1108,27 +1058,18 @@ class cartaaceptacioncontroller {
           info_despues_de_modificar: JSON.stringify(saveCarta),
           id_principal: cac_id,
           tipo_registro: "Carta",
-          motivo_correccion: motivo_correccion,
+          motivo_correccion,
         };
-
-        //Enviamos la data a la funcion de logs
         await logsUsers(req, res, next, datalogs);
       } catch (error) {
-        //! Registramos el error capturado
-        try {
-          next(error);
-        } catch (e) {}
+        console.error("Error al guardar log de carta:", error);
       }
-      //! ====================================================================
-      //* FIN DEL GUARDADO DEL LOGS DE REGISTRO DE LA ACCIÓN
-      //! ====================================================================
 
-      //TODO: AQUI VA EL GUARDADO DEL DETALLE DE LA CARTA
       for (const cliente of dataArrayClientes) {
         try {
-          let detCartaA = await DetalleCA.findByPk(cliente.cad_id);
+          const detCartaA = await DetalleCA.findByPk(cliente.cad_id);
 
-          let detCA = await DetalleCA.update(
+          const detCA = await DetalleCA.update(
             {
               cad_bl: cliente.cad_bl,
               cad_cantbultos: cliente.cad_cantbultos,
@@ -1139,19 +1080,11 @@ class cartaaceptacioncontroller {
               cad_pro_number: cliente.cad_pro_number,
               cad_tarifa_diferenciada: cliente.cad_tarifa_diferenciada,
             },
-            {
-              where: {
-                cad_id: cliente.cad_id,
-              },
-            }
+            { where: { cad_id: cliente.cad_id } }
           );
 
-          //! ====================================================================
-          //* GUARDAMOS EL LOGS DE REGISTRO DE LA ACCIÓN
-          //! ====================================================================
           try {
-            // Definimos la data que se guardara en el logs de usuarios
-            let datalogs = {
+            const datalogs = {
               usuario: req.user.log_username,
               tipo_de_evento: "Editar Detalle C.A.",
               fecha_del_evento: moment().format(),
@@ -1160,188 +1093,26 @@ class cartaaceptacioncontroller {
               info_despues_de_modificar: JSON.stringify(detCA),
               id_principal: cliente.cad_id,
               tipo_registro: "Detalle Carta",
-              motivo_correccion: motivo_correccion,
+              motivo_correccion,
             };
-
-            //Enviamos la data a la funcion de logs
             await logsUsers(req, res, next, datalogs);
-          } catch (error) {
-            //! Registramos el error capturado
-            try {
-              next(error);
-            } catch (e) {}
+          } catch (logError) {
+            console.error("Error al guardar log de detalle:", logError);
           }
-          //! ====================================================================
-          //* FIN DEL GUARDADO DEL LOGS DE REGISTRO DE LA ACCIÓN
-          //! ====================================================================
-        } catch (error) {
-          //! Registramos el error capturado
-          try {
-            next(error);
-          } catch (e) {}
+        } catch (detalleError) {
+          console.error("Error al editar detalle cliente:", detalleError);
         }
       }
 
-      try {
-        const cartaActualizada = await CartaAceptacion.findByPk(cac_id);
+      let pdf = false;
 
-        //* Obtenemos informacione del estado de almacenaje
-        const estadoAlmacenaje = await EstadosAlmacenaje.findOne({
-          where: {
-            stal_id: cartaActualizada.cac_stal_id,
-          },
-        });
+      if (saveCarta) {
+        let id = cac_id;
+        pdf = await helpercontroller.CrearPDFCA({ req, res, next, id });
+      }
 
-        //* Obtenemos informacion del tipo de documento de transporte
-        const docTransporte = await TipoDocTransporte.findOne({
-          where: {
-            tdt_id: cartaActualizada.cac_tdt_id,
-          },
-        });
-
-        //* Obtenemos informacion de la aduana
-        const aduana = await Aduanas.findOne({
-          where: {
-            adu_id: cartaActualizada.cac_adu_id,
-          },
-        });
-
-        //* Obtenemos informacion del transportista
-        const Transportista = await Transportistas.findOne({
-          where: {
-            tra_id: cartaActualizada.cac_tra_id,
-          },
-        });
-
-        //* Obtenemos informacion del usuario que esta creando la carta
-        const dataUsuario = await Usuarios.findOne({
-          where: {
-            usu_id: cartaActualizada.cac_usu_id,
-          },
-          include: [
-            {
-              model: Roles,
-            },
-          ],
-        });
-
-        //************************************************************* */
-        // TODO: INICIAMOS PUPPETEER
-        //************************************************************* */
-        const browser = await puppeteer.launch({
-          headless: true,
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
-          ignoreHTTPSErrors: true,
-        });
-
-        // Obtener el contenido HTML con variables dinámicas
-        const html = await new Promise((resolve, reject) => {
-          res.render(
-            "formatoCA",
-            {
-              cartaNumero: cartaActualizada.cac_numero,
-              fecha: cartaActualizada.cac_fecha,
-              docTransporte: docTransporte.tdt_abreviatura,
-              estadoAlmacenaje: estadoAlmacenaje.stal_estado,
-              cac_tipocontenedor: cac_tipocontenedor,
-              cac_contenedor: cac_contenedor,
-              aduana: aduana.adu_nombre,
-              transportista: Transportista.tra_nombre ?? "N/A",
-              consignatarios: dataArrayClientes,
-              totalBl: cac_totalbl,
-              totalPeso: cac_totalpeso,
-              totalCBM: cac_totalcbm,
-              creada_por:
-                dataUsuario.usu_nombres + " " + dataUsuario.usu_apellidos ??
-                "CLG",
-              rol: dataUsuario.crm_rol.rol_nombre,
-            },
-            (err, html) => {
-              if (err) reject(err);
-              resolve(html);
-            }
-          );
-        });
-
-        //Creamos una nueva pagina (instancia)
-        const page = await browser.newPage();
-        //Seteamos el contenido de la pagina a Puppeteer
-        await page.setContent(html);
-        // To reflect CSS used for screens instead of print
-        await page.emulateMediaType("screen");
-
-        const footerHtml = await new Promise((resolve, reject) => {
-          res.render("footer", {}, (err, footerHtml) => {
-            if (err) reject(err);
-            resolve(footerHtml);
-          });
-        });
-
-        // Download the PDF
-        const pdfBuffer = await page.pdf({
-          path: `CartaAceptacion_${cartaActualizada.cac_numero}.pdf`,
-          displayHeaderFooter: true,
-          headerTemplate:
-            '<div style="margin-right: 50px; font-size:10px; text-align:right; width:100%;">Fecha de creación: ' +
-            moment().format("DD-MM-YYYY") +
-            "</div>",
-          footerTemplate: `
-                <div style="
-                    width: 100%;
-                    text-align: center;
-                    font-size: 12px;
-                    height: 70px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                ">
-                    ${footerHtml}
-                </div>
-                `,
-          margin: { top: "30px", right: "50px", bottom: "50px", left: "50px" },
-          printBackground: true,
-          format: "Letter",
-        });
-
-        //Si lo quisieramos convertir a Base64
-        //const pdfBase64 = pdfBuffer.toString('base64');
-
-        await browser.close();
-
-        // Nombre del archivo
-        const filename = cartaActualizada.cac_numero + ".pdf";
-        const path_carta = do_path + "Cartas_Aceptacion/" + filename;
-
-        // Configurar el endpoint de DigitalOcean Spaces
-        const spacesEndpoint = new AWS.Endpoint(do_spe + "Cartas_Aceptacion/");
-        // Configurar S3 con las credenciales de DigitalOcean Spaces
-        const s3 = new AWS.S3({
-          endpoint: spacesEndpoint,
-          accessKeyId: do_spk,
-          secretAccessKey: do_sps,
-        });
-
-        await s3
-          .putObject({
-            Bucket: do_spn,
-            Key: filename,
-            Body: pdfBuffer,
-            ACL: "public-read",
-            ContentType: "application/pdf",
-          })
-          .promise();
-
-        //* Actualizamos la carta agregando el path_carta del pdf de la carta recien creado
-        await CartaAceptacion.update(
-          {
-            cac_pdf: path_carta,
-          },
-          {
-            where: { cac_id },
-          }
-        );
-      } catch (error) {
-        console.log(error);
+      if (pdf == false) {
+        throw new Error(`No se creo el pdf de la carta: ${cac_id}`);
       }
 
       jsonResponse = {
@@ -1350,11 +1121,7 @@ class cartaaceptacioncontroller {
         response: "Carta de Aceptación actualizada exitosamente!",
       };
     } catch (error) {
-      //! Registramos el error capturado
-      try {
-        next(error);
-      } catch (e) {}
-
+      console.error("Error general:", error);
       jsonResponse = {
         status: 500,
         message: "Error",
@@ -1362,8 +1129,10 @@ class cartaaceptacioncontroller {
       };
     }
 
-    return res.status(jsonResponse.status).json(jsonResponse);
-  } //END EditarCA
+    if (!res.headersSent) {
+      return res.status(jsonResponse.status).json(jsonResponse);
+    }
+  }
 
   /**
    * TODO FUNCIÓN PARA OBTENER CORRELATIVO DE CARTAS DE ACEPTACIÓN
@@ -1434,8 +1203,7 @@ class cartaaceptacioncontroller {
         await correlativo.reload(); // <-- recargar valores actualizados
       }
 
-      const correlativoFormateado = String(
-        correlativo.cor_correlativo);
+      const correlativoFormateado = String(correlativo.cor_correlativo);
       return `${correlativoFormateado}-${year}`;
     } catch (error) {
       console.error("Error al aumentar correlativo:", error);
