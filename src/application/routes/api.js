@@ -114,7 +114,7 @@ router.post(
 //===========================================================================
 //TODO: CARTAS DE ACEPTACIÓN
 //===========================================================================
-router.post("/carta/obtenerca",verifyToken,cartaaceptacioncontroller.ObtenerCA);
+router.post("/carta/obtenerca",cartaaceptacioncontroller.ObtenerCA);
 
 router.post("/carta/crearCA",verifyToken,upload.fields([{ name: "cac_manifiesto_archivo", maxCount: 1 }]),cartaaceptacioncontroller.CrearCA);
 

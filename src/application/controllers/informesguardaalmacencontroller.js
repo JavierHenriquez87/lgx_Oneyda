@@ -1186,7 +1186,8 @@ class informesguardaalmacencontroller {
                 //* Generamos el informe de guarda almacen
                 saveIGA = await InformeGuardaAlmacen.create({
                     iga_com_id: 38,
-                    iga_usu_id: req.user.log_usu_id,
+                    iga_usu_id: 156,
+                    // iga_usu_id: req.user.log_usu_id,
                     iga_cac_id,
                     iga_stal_id,
                     iga_marchamo: iga_marchamo.toUpperCase(),
@@ -2219,13 +2220,15 @@ class informesguardaalmacencontroller {
                 delete dataOriginal.iga_id; //* Como sera un nuevo id de informe, borramos el id actual para que se cree uno nuevo
 
                 //* Cambiamos algunos valores que no necesitamos se copien en el nuevo informe
-                dataOriginal.iga_usu_id = req.user.log_usu_id;
+                //dataOriginal.iga_usu_id = req.user.log_usu_id;
+                dataOriginal.iga_usu_id = 156;
                 dataOriginal.iga_stal_id = iga_stal_id;
                 dataOriginal.iga_codigo = codigocorrelativo;
                 dataOriginal.iga_fechaabandono = infoGA_Creado?.iga_fechaabandono ? formatFechaSafe(infoGA_Creado.iga_fechaabandono) : null;
                 dataOriginal.iga_fechaingreso = infoGA_Creado?.iga_fechaingreso ? formatFechaSafe(infoGA_Creado.iga_fechaingreso) : null;
                 //si no viene la fecha que se guarde la fecha actual  CAMBIO AGREGADO AQUI en : new Date();
-                dataOriginal.iga_fecha = infoGA_Creado?.iga_fecha ? formatFechaSafe(infoGA_Creado.iga_fecha) : new Date();
+                dataOriginal.iga_fecha = infoGA_Creado?.iga_fecha? formatFechaSafe(infoGA_Creado.iga_fecha): moment().format('YYYY-MM-DD HH:mm:ss'); // o solo 'YYYY-MM-DD' según tu modelo
+
                 dataOriginal.iga_fecha_recepcionado = infoGA_Creado?.iga_fecha_recepcionado ? formatFechaSafe(infoGA_Creado.iga_fecha_recepcionado) : null;
                 dataOriginal.iga_archivo = null;
                 dataOriginal.iga_estado = 0;
@@ -2241,7 +2244,8 @@ class informesguardaalmacencontroller {
                 try {
                     // Definimos la data que se guardara en el logs de usuarios
                     const datalogs = {
-                        "usuario": req.user.log_username,
+                        // "usuario": req.user.log_username,
+                        "usuario":"Oneyda",
                         "tipo_de_evento": "Crear IGA - Cambio Regimen",
                         "fecha_del_evento": moment().format(),
                         "tabla_afectada": "clg_iga_informeguardalmacen",
