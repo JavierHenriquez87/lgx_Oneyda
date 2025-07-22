@@ -86,7 +86,8 @@ class consultadocumentoscontroller {
                         SELECT
                         s.de_lgx as sal_de_lgx,
                         s.sal_id,
-                        s.sal_codigo,
+                        s.sal_codigo as salida_pdf,
+                        s.sal_codigo as salida,
                         IF(ANY_VALUE(d.sald_sco_id) IS NULL, s.sal_iga_id, c.sco_iga_id) AS igaId,
                         IF(ANY_VALUE(d.sald_sco_id) IS NULL, 'SIMPLE', 'CONSOLIDADA') AS tipoSalida,
                         CONCAT_WS(' ', ANY_VALUE(u.usu_nombres), ANY_VALUE(u.usu_apellidos)) AS salidaUsuario
@@ -103,18 +104,17 @@ class consultadocumentoscontroller {
                 type: QueryTypes.SELECT,
             });
 
-
+            
             for (const item of documentos) {
-                if (item.cac_pdf && !item.ca_de_lgx) {
-                    item.cac_pdf = 'https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/cartas_aceptacion/' + item.cac_pdf;
-                }
+              
+                item.cac_pdf = item.ca_de_lgx == 1 || item.cac_pdf ?.startsWith("https")
+                ? item.cac_pdf : 'https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/cartas_aceptacion/' + item.cac_pdf;
+                
+                item.iga_archivo = item.if_de_lgx == 1 || item.iga_archivo ?.startsWith("https")
+                ? item.iga_archivo : 'https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/' + item.iga_archivo;
 
-                if (item.iga_archivo && !item.if_de_lgx) {
-                    item.iga_archivo = 'https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/' + item.iga_archivo;
-                }
-
-                if (item.sal_codigo && !item.sal_de_lgx) {
-                    item.sal_codigo = 'https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_salidas_aduana/' + item.sal_codigo + '.pdf';
+                if (item.salida_pdf && !item.sal_de_lgx) {
+                    item.salida_pdf = 'https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_salidas_aduana/' + item.salida_pdf + '.pdf';
                 }
 
                 if (item.cac_manifiesto_archivo && !item.ca_de_lgx) {

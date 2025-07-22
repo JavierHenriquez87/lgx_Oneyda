@@ -130,6 +130,7 @@ router.post("/carta/anularCA",verifyToken,upload.fields([{ name: "doc_anulacion"
 //TODO: MENUS
 //===========================================================================
 router.post("/menus/obtenermenus", verifyToken, menucontroller.ObtenerMenus);
+
 router.post("/menus/accesosMenus", verifyToken, menucontroller.accesosMenus);
 
 //===========================================================================
@@ -514,39 +515,47 @@ router.post(
   verifyToken,
   panelcorreccionescontroller.ObtenerUsuariosCorrecciones
 );
+
 router.post(
   "/panelcorrecciones/ConsultarDocumento",
   verifyToken,
   panelcorreccionescontroller.ConsultarDocumento
 );
+
 //! Cambio de Fecha
 router.post(
   "/panelcorrecciones/ObtenerDatosDocumento",
   verifyToken,
   panelcorreccionescontroller.ObtenerDatosDocumento
 );
+
 router.post(
   "/panelcorrecciones/CambiarFechaDocumento",
   panelcorreccionescontroller.CambiarFechaDocumento
 );
+
 //! Actualizar PDF
 router.post(
   "/panelcorrecciones/ActualizarPDF",
   verifyToken,
   panelcorreccionescontroller.ActualizarPDF
 );
-//! Actualizar pais de Destino
+
+//! Datos para cambio de pais de destino
 router.post(
   "/panelcorrecciones/ObtenerDatosPaisDestino",
   verifyToken,
   panelcorreccionescontroller.ObtenerDatosPaisDestino
 );
+
+//! Actualizar pais de Destino
 router.post(
   "/panelcorrecciones/ActualizarPaisDestino",
   verifyToken,
   panelcorreccionescontroller.ActualizarPaisDestino
 );
-//!
+
+//! Actualizar cambio de cliente
 //*para obtener los datos del cliente seria esta misma == > panelcorrecciones/ConsultarDocumento
 router.post(
   "/panelcorrecciones/CambioCliente",
@@ -554,18 +563,21 @@ router.post(
   panelcorreccionescontroller.CambioCliente
 );
 
+//! Cambio de Transportista
 //*para obtener los datos del transportista seria esta misma == > panelcorrecciones/ConsultarDocumento
 router.post(
   "/panelcorrecciones/CambioTransportista",
   panelcorreccionescontroller.CambioTransportista
 );
 
+//! Cambio de Aduana
 //*para obtener los datos de la aduana seria esta misma == > panelcorrecciones/ConsultarDocumento
 router.post(
   "/panelcorrecciones/CambioAduana",
   panelcorreccionescontroller.CambioAduana
 );
 
+//! Cambio de Contenedor
 //*para obtener los datos del contenedor seria esta misma == > panelcorrecciones/ConsultarDocumento
 router.post(
   "/panelcorrecciones/CambioContenedor",
@@ -573,83 +585,45 @@ router.post(
   panelcorreccionescontroller.CambioContenedor
 );
 
+//! Informacion de documento de transporte
 router.post(
   "/panelcorrecciones/informacionDocTransporte",
   verifyToken,
   panelcorreccionescontroller.informacionDocTransporte
 );
-// {
-//     "documento": "152-2022",
-//     "tipo": "Carta"
-// }
 
+//! Cambio de documento de transporte
 router.post(
   "/panelcorrecciones/CambioDocumentoTransporte",
   verifyToken,
   panelcorreccionescontroller.CambioDocumentoTransporte
 );
-// {
-//     "documento" : "152-2022",
-//     "tipo" : "Carta",
-//     "cad_id" : 34370,
-//     "DocTransporte_nuevo" : "ELS-10245",
-//     "DocTransporte_antiguo" : "ELS-10248",
-//     "motivoCorreccion" : "Cambio de fecha",
-//     "solicitante" : 309
 
-// }
-
+//! Cambio de peso
 //*para obtener los datos del peso seria esta misma == > panelcorrecciones/informacionDocTransporte
 router.post(
   "/panelcorrecciones/CambioPeso",
   verifyToken,
   panelcorreccionescontroller.CambioPeso
 );
-// {
-//     "documento" : "152-2022",
-//     "tipo" : "Carta",
-//     "cad_id" : 34370,
-//     "Peso_nuevo" : "841",
-//     "Peso_antiguo" : "831",
-//     "motivoCorreccion" : "Cambio de fecha",
-//     "solicitante" : 309
 
-// }
-
+//! Actualizacion de volumen
 //*para obtener los datos del volumen seria esta misma == > panelcorrecciones/informacionDocTransporte
 router.post(
   "/panelcorrecciones/Actualizar_Volumen",
   verifyToken,
   panelcorreccionescontroller.CambioVolumen
 );
-// {
-//     "documento" : "152-2022",
-//     "tipo" : "Carta",
-//     "cad_id" : 34370,
-//     "volumen_nuevo" : "21.1002",
-//     "volumen_antiguo" : "11.1002",
-//     "motivoCorreccion" : "Cambio de volumen",
-//     "solicitante" : 309
 
-// }
-
+//! Actualizar Bultos
 //*para obtener los bultos seria esta misma == > panelcorrecciones/informacionDocTransporte
 router.post(
   "/panelcorrecciones/Actualizar_Bultos",
   verifyToken,
   panelcorreccionescontroller.Cambio_Bultos
 );
-// {
-//     "documento" : "152-2022",
-//     "tipo" : "Carta",
-//     "cad_id" : 34370,
-//     "bulto_nuevo" : "13",
-//     "bulto_antiguo" : "13",
-//     "motivoCorreccion" : "Cambio de volumen",
-//     "solicitante" : 309
 
-// }
-
+//! Obtener informacion de clientes
 router.post(
   "/panelcorrecciones/Informacion_Clientes",
   verifyToken,
@@ -658,6 +632,8 @@ router.post(
 // {
 //     "documento": "152-2022"
 // }
+
+//! Agregar Cliente a carta
 router.post(
   "/panelcorrecciones/Agregar_Cliente",
   verifyToken,
@@ -676,6 +652,7 @@ router.post(
 //     "solicitante" : 309
 // }
 
+//! Eliminar cliente de carta e informe
 router.post(
   "/panelcorrecciones/Eliminar_cliente",
   verifyToken,
