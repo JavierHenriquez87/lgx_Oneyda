@@ -476,6 +476,8 @@ class helpercontroller {
           usu_id: infoIga.iga_usu_id,
         },
       });
+      
+      const correo_usuario = dataUsuario?.usu_email || "";
 
       //************************************************************* */
       // TODO: INICIAMOS PUPPETEER
@@ -523,7 +525,7 @@ class helpercontroller {
             iga_menaje_casa: infoIga.iga_menaje_casa,
             iga_comentarios: infoIga.iga_comentarios,
             iga_tarimas_ocupadas: infoIga.iga_tarimas_ocupadas,
-            correo_usuario: dataUsuario.usu_email,
+            correo_usuario: correo_usuario,
             descripcion:
               infoIga.clg_dga_detallesguardalmacens[0].clg_pro_producto
                 .pro_nombre,
