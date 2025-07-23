@@ -590,7 +590,7 @@ class informesguardaalmacencontroller {
       //* Obtenemos la información que tenia antes de la modificación
       const infoIgaOld = await InformeGuardaAlmacen.findByPk(iga_id);
 
-      await InformeGuardaAlmacen.update(
+      let actualizar = await InformeGuardaAlmacen.update(
         {
           iga_comentarios,
         },
@@ -620,13 +620,26 @@ class informesguardaalmacencontroller {
         await logsUsers(req, res, next, datalogs);
       } catch (error) {
         //! Registramos el error capturado
-        try {
-          next(error);
-        } catch (e) {}
+        console.error("Error al registrar log:", error);
+
       }
       //! ====================================================================
       //* FIN DEL GUARDADO DEL LOGS DE REGISTRO DE LA ACCIÓN
       //! ====================================================================
+      
+      if(actualizar == false){
+
+        throw new Error(`Error al actualizar el comentario `);
+
+      }
+      let id = iga_id
+      let actualizarPdf = await helpercontroller.CrearPdfInforme({ req,res,next,id})
+      
+      if(actualizarPdf == false){
+
+        throw new Error(`Error al actualizar el pdf de informe `);
+
+      }
 
       jsonResponse = {
         status: 200,
@@ -635,10 +648,7 @@ class informesguardaalmacencontroller {
       };
     } catch (error) {
       //! Registramos el error capturado
-      try {
-        next(error);
-      } catch (e) {}
-
+      
       jsonResponse = {
         status: 500,
         message: "Error",

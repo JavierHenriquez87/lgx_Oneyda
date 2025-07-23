@@ -187,8 +187,8 @@ class cartaaceptacioncontroller {
 
     // Definir las validaciones de campos dentro del método
     const validaciones = [
-      check("datobusqueda").notEmpty().withMessage("Dato requerido."),
-      check("tipobusqueda").notEmpty().withMessage("Dato requerido."), //Carta, Cliente o Informe
+      check("datobusqueda").notEmpty().withMessage("datobusqueda requerido."),
+      check("tipobusqueda").notEmpty().withMessage("tipobusqueda requerido."), //Carta, Cliente o Informe
     ];
 
     // Ejecutar las validaciones
@@ -230,9 +230,9 @@ class cartaaceptacioncontroller {
             dataInforme = dataInforme.map((dataI) => {
               return {
                 ...dataI.toJSON(), // Convierte el objeto Sequelize a JSON para obtener solo los datos
-                archivo:
-                  "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/" +
-                  dataI.iga_archivo,
+                archivo: dataI.de_lgx == 1 || dataI.iga_archivo?.startsWith("https") ? dataI.iga_archivo
+                : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/" + dataI.iga_archivo
+                
               };
             });
           }
@@ -258,9 +258,8 @@ class cartaaceptacioncontroller {
           dataInforme = dataInforme.map((dataI) => {
             return {
               ...dataI.toJSON(), // Convierte el objeto Sequelize a JSON para obtener solo los datos
-              archivo:
-                "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/" +
-                dataI.iga_archivo,
+              archivo: dataI.de_lgx == 1 || dataI.iga_archivo?.startsWith("https") ? dataI.iga_archivo
+              : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/" + dataI.iga_archivo
             };
           });
         }
@@ -285,9 +284,8 @@ class cartaaceptacioncontroller {
           dataInforme = dataInforme.map((dataI) => {
             return {
               ...dataI.toJSON(), // Convierte el objeto Sequelize a JSON para obtener solo los datos
-              archivo:
-                "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/" +
-                dataI.iga_archivo,
+              archivo: dataI.de_lgx == 1 || dataI.iga_archivo?.startsWith("https") ? dataI.iga_archivo
+              : "https://sistemas.clgsv.com/ucontrol/ci/clg/pdf/informes_guardalmacen/" + dataI.iga_archivo
             };
           });
         }
